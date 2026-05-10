@@ -3,6 +3,15 @@ import re
 from pathlib import Path
 
 
+def _fix_char_spacing(text: str) -> str:
+    """Fix PDFs where characters are stored individually: 'И л л ю с т р а' → 'Иллюстра'."""
+    # Match 3+ single Cyrillic/Latin letters each separated by a single space
+    pattern = r'(?<![А-Яа-яЁёA-Za-z])([А-Яа-яЁёA-Za-z] ){3,}[А-Яа-яЁёA-Za-z](?![А-Яа-яЁёA-Za-z])'
+    def join_chars(m):
+        return m.group(0).replace(' ', '')
+    return re.sub(pattern, join_chars, text)
+
+
 def _extract_author(metadata: dict, filename: str) -> str:
     for key in ("author", "Author", "creator", "Creator"):
         val = metadata.get(key)
@@ -74,6 +83,7 @@ def process_pdf(
             try:
                 page = doc[i]
                 text = page.get_text("text") or ""
+                text = _fix_char_spacing(text)
             except Exception:
                 text = ""
             if not text or len(text.strip()) < 20:
