@@ -4,12 +4,22 @@ import os
 import chromadb
 from openai import OpenAI
 
+# One shared ChromaDB client for the entire process
+_chroma_client: chromadb.PersistentClient | None = None
+
+
+def _get_chroma_client() -> chromadb.PersistentClient:
+    global _chroma_client
+    if _chroma_client is None:
+        _chroma_client = chromadb.PersistentClient(path="./chroma_db")
+    return _chroma_client
+
 
 class VectorStore:
     def __init__(self, user_id: str = "default"):
         uid_hash = hashlib.md5(user_id.encode()).hexdigest()[:16]
         self._collection_name = f"books_{uid_hash}"
-        self.chroma = chromadb.PersistentClient(path="./chroma_db")
+        self.chroma = _get_chroma_client()
         self._collection = self._get_or_create_collection()
         self.openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
