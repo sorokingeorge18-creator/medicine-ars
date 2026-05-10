@@ -4,13 +4,16 @@ import os
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
 
+from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from pydantic import BaseModel
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.requests import Request
 
 from pdf_processor import process_pdf
 from vector_store import VectorStore
@@ -19,9 +22,32 @@ load_dotenv()
 
 app = FastAPI(title="Медицинская библиотека")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "dev-secret-change-me"))
 
-store = VectorStore()
+oauth = OAuth()
+oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
+_stores: dict[str, VectorStore] = {}
+
+def get_store(user_id: str) -> VectorStore:
+    if user_id not in _stores:
+        _stores[user_id] = VectorStore(user_id=user_id)
+    return _stores[user_id]
+
 executor = ThreadPoolExecutor(max_workers=2)
+
+
+async def require_user(request: Request) -> dict:
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="Необходима авторизация")
+    return user
 
 SYSTEM_PROMPT = """Ты — учебный ассистент по медицине. Твоя единственная задача — отвечать на вопросы, \
 используя ТОЛЬКО текст из фрагментов учебников, которые тебе предоставлены ниже.
@@ -58,10 +84,11 @@ def _build_context(chunks: list[dict]) -> str:
 # ---------------------------------------------------------------------------
 
 @app.post("/api/upload")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(file: UploadFile = File(...), user: dict = Depends(require_user)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Только PDF файлы")
 
+    store = get_store(user["sub"])
     if store.book_exists(file.filename):
         return {"status": "exists", "filename": file.filename}
 
@@ -95,13 +122,13 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 
 @app.get("/api/books")
-def list_books():
-    return store.list_books()
+def list_books(user: dict = Depends(require_user)):
+    return get_store(user["sub"]).list_books()
 
 
 @app.delete("/api/books")
-def delete_books():
-    store.delete_all()
+def delete_books(user: dict = Depends(require_user)):
+    get_store(user["sub"]).delete_all()
     return {"status": "ok"}
 
 
@@ -111,7 +138,9 @@ class AskRequest(BaseModel):
 
 
 @app.post("/api/ask")
-def ask_question(body: AskRequest):
+def ask_question(body: AskRequest, request: Request, user: dict = Depends(require_user)):
+    user_store = get_store(user["sub"])
+
     def generate():
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         top_k = int(os.getenv("TOP_K_CHUNKS", 20))
@@ -144,7 +173,7 @@ def ask_question(body: AskRequest):
         seen_ids: set[str] = set()
         all_chunks: list[dict] = []
         for q in queries:
-            for chunk in store.search(q, top_k=top_k // len(queries) + 2):
+            for chunk in user_store.search(q, top_k=top_k // len(queries) + 2):
                 cid = chunk.get("filename", "") + str(chunk.get("page", "")) + chunk["text"][:50]
                 if cid not in seen_ids:
                     seen_ids.add(cid)
@@ -184,6 +213,43 @@ def ask_question(body: AskRequest):
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+# ---------------------------------------------------------------------------
+# Auth endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/auth/google")
+async def auth_google(request: Request):
+    redirect_uri = os.getenv("BASE_URL", "http://localhost:8000") + "/auth/callback"
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@app.get("/auth/callback")
+async def auth_callback(request: Request):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token.get("userinfo")
+    request.session["user"] = {
+        "sub": user_info["sub"],
+        "name": user_info["name"],
+        "email": user_info["email"],
+        "picture": user_info.get("picture", ""),
+    }
+    return RedirectResponse("/")
+
+
+@app.get("/auth/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse("/")
+
+
+@app.get("/auth/me")
+async def get_me(request: Request):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401)
+    return user
 
 
 # ---------------------------------------------------------------------------

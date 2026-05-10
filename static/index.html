@@ -94,6 +94,32 @@ tailwind.config = {
 <body class="h-full flex overflow-hidden text-on-background">
 
 <!-- ================================================================
+     LOGIN PAGE
+     ================================================================ -->
+<div id="page-login" class="hidden fixed inset-0 bg-surface z-50 flex items-center justify-center p-xl">
+  <div class="w-full max-w-sm flex flex-col items-center gap-xl text-center">
+    <div class="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center">
+      <span class="material-symbols-outlined text-on-primary icon-fill" style="font-size:40px;">local_hospital</span>
+    </div>
+    <div>
+      <h1 class="text-display-lg font-bold text-on-surface">Медицинская<br>Библиотека</h1>
+      <p class="text-body-md text-on-surface-variant mt-md">Загружайте учебники и задавайте вопросы ИИ-ассистенту. Каждый пользователь имеет свою личную библиотеку.</p>
+    </div>
+    <a href="/auth/google"
+      class="w-full flex items-center justify-center gap-md bg-surface-container-lowest border border-outline-variant rounded-xl py-md px-lg text-body-md font-semibold text-on-surface hover:bg-surface-container transition-colors shadow-sm">
+      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        <path fill="none" d="M0 0h48v48H0z"/>
+      </svg>
+      Войти через Google
+    </a>
+  </div>
+</div>
+
+<!-- ================================================================
      DESKTOP SIDEBAR
      ================================================================ -->
 <aside class="hidden md:flex h-full w-60 shrink-0 border-r border-outline-variant bg-surface-container-low flex-col z-20">
@@ -469,6 +495,25 @@ tailwind.config = {
           </div>
         </div>
 
+        <!-- Account -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl flex flex-col gap-lg">
+          <h2 class="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Аккаунт</h2>
+          <div id="profile-google-info" class="flex items-center gap-md">
+            <div id="profile-google-avatar" class="w-10 h-10 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center overflow-hidden shrink-0">
+              <span class="material-symbols-outlined text-on-surface-variant" style="font-size:22px;">account_circle</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p id="profile-google-name" class="text-label-md font-semibold text-on-surface truncate"></p>
+              <p id="profile-google-email" class="text-label-sm text-on-surface-variant truncate"></p>
+            </div>
+          </div>
+          <a href="/auth/logout"
+            class="flex items-center justify-center gap-sm w-full border border-outline-variant rounded-lg py-sm px-md text-label-md font-medium text-on-surface-variant hover:bg-surface-container hover:text-error transition-colors">
+            <span class="material-symbols-outlined" style="font-size:18px;">logout</span>
+            Выйти из аккаунта
+          </a>
+        </div>
+
       </div>
     </main>
   </div>
@@ -615,6 +660,7 @@ let chatHistory = [];
 let isGenerating = false;
 let currentPage = 'dashboard';
 let allBooks = [];
+let currentUser = null;
 
 // ── Navigation ────────────────────────────────────────────────────
 const PAGES = ['dashboard','library','upload','chat','profile','settings'];
@@ -1022,8 +1068,6 @@ async function sendMessage() {
       textDiv.textContent = 'Ошибка при обращении к серверу. Попробуйте ещё раз.';
       return;
     }
-    removeThinking();
-    const {wrapper, textDiv} = createAiBubble();
     let fullText = '', sources = [];
     const c = document.getElementById('chat-messages');
     const reader = resp.body.getReader();
@@ -1042,11 +1086,16 @@ async function sendMessage() {
         if (data === '[DONE]') break;
         try {
           const ev = JSON.parse(data);
-          if (ev.type==='token') { fullText+=ev.text; textDiv.innerHTML=renderMarkdown(fullText); c.scrollTop=c.scrollHeight; }
-          else if (ev.type==='sources') sources=ev.sources;
+          if (ev.type==='token') fullText += ev.text;
+          else if (ev.type==='sources') sources = ev.sources;
         } catch {}
       }
     }
+
+    removeThinking();
+    const {wrapper, textDiv} = createAiBubble();
+    textDiv.innerHTML = renderMarkdown(fullText);
+    c.scrollTop = c.scrollHeight;
 
     if (sources.length > 0) wrapper.appendChild(buildSourcesEl(sources));
     chatHistory.push({role:'user',content:question});
@@ -1171,9 +1220,51 @@ function saveSettings() {
   setTimeout(() => { msg.classList.add('hidden'); msg.classList.remove('flex'); }, 2500);
 }
 
+// ── Auth ──────────────────────────────────────────────────────────
+function showLoginPage() {
+  document.getElementById('page-login').classList.remove('hidden');
+  document.getElementById('page-login').classList.add('flex');
+}
+
+function hideLoginPage() {
+  document.getElementById('page-login').classList.add('hidden');
+  document.getElementById('page-login').classList.remove('flex');
+}
+
+function updateUserUI(user) {
+  // Sidebar name (use Google name if user hasn't customized)
+  if (!localStorage.getItem('profile_name')) {
+    document.getElementById('sidebar-name').textContent = user.name;
+    document.getElementById('profile-display-name').textContent = user.name;
+  }
+  // Google info in profile page
+  document.getElementById('profile-google-name').textContent = user.name;
+  document.getElementById('profile-google-email').textContent = user.email;
+  if (user.picture) {
+    document.getElementById('profile-google-avatar').innerHTML =
+      `<img src="${user.picture}" class="w-full h-full object-cover" referrerpolicy="no-referrer">`;
+  }
+}
+
+async function initAuth() {
+  try {
+    const resp = await fetch('/auth/me');
+    if (resp.ok) {
+      currentUser = await resp.json();
+      hideLoginPage();
+      updateUserUI(currentUser);
+      applyProfile();
+      refreshDashboard();
+    } else {
+      showLoginPage();
+    }
+  } catch(e) {
+    showLoginPage();
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────
-applyProfile();
-refreshDashboard();
+initAuth();
 </script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+import hashlib
 import os
 
 import chromadb
@@ -5,7 +6,9 @@ from openai import OpenAI
 
 
 class VectorStore:
-    def __init__(self):
+    def __init__(self, user_id: str = "default"):
+        uid_hash = hashlib.md5(user_id.encode()).hexdigest()[:16]
+        self._collection_name = f"books_{uid_hash}"
         self.chroma = chromadb.PersistentClient(path="./chroma_db")
         self._collection = self._get_or_create_collection()
         self.openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -13,7 +16,7 @@ class VectorStore:
 
     def _get_or_create_collection(self):
         return self.chroma.get_or_create_collection(
-            name="medical_books",
+            name=self._collection_name,
             metadata={"hnsw:space": "cosine"},
         )
 
@@ -56,7 +59,7 @@ class VectorStore:
 
     def delete_all(self) -> None:
         """Delete the entire collection and recreate it empty."""
-        self.chroma.delete_collection("medical_books")
+        self.chroma.delete_collection(self._collection_name)
         self._collection = self._get_or_create_collection()
 
     # ------------------------------------------------------------------
