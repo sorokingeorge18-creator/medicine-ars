@@ -5,7 +5,7 @@ import chromadb
 from openai import OpenAI
 
 # One shared ChromaDB client for the entire process
-_chroma_client: chromadb.PersistentClient | None = None
+_chroma_client = None
 
 
 def _get_chroma_client() -> chromadb.PersistentClient:
