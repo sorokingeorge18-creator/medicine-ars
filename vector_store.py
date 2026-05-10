@@ -85,6 +85,10 @@ class VectorStore:
         with sqlite3.connect(self._db_path) as conn:
             conn.execute("DELETE FROM chunks")
 
+    def delete_book(self, filename: str) -> None:
+        with sqlite3.connect(self._db_path) as conn:
+            conn.execute("DELETE FROM chunks WHERE filename = ?", (filename,))
+
     # ------------------------------------------------------------------
     # Read
     # ------------------------------------------------------------------

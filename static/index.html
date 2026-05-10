@@ -907,15 +907,29 @@ function renderBooks(books) {
         <h3 class="text-headline-sm text-on-surface mb-xs group-hover:text-primary transition-colors line-clamp-2">${escapeHtml(book.title)}</h3>
         <p class="text-label-md text-on-surface-variant">${escapeHtml(book.author)}</p>
       </div>
-      <div class="flex items-center justify-between pt-sm border-t border-surface-container-high mt-auto">
+      <div class="flex items-center justify-between pt-sm border-t border-surface-container-high mt-auto gap-xs">
         <div class="text-outline" style="font-family:'JetBrains Mono',monospace;font-size:12px;">PDF · ${book.chunk_count} фрагм.</div>
-        <button onclick="goAskBook('${escapeHtml(book.title)}')"
-          class="px-sm py-xs bg-surface text-primary border border-primary hover:bg-primary hover:text-on-primary rounded text-label-md transition-colors flex items-center gap-xs">
-          <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span> Спросить ИИ
-        </button>
+        <div class="flex gap-xs">
+          <button onclick="deleteBook('${escapeHtml(book.filename)}')"
+            class="p-xs text-on-surface-variant border border-outline-variant hover:bg-error-container hover:text-error hover:border-error rounded transition-colors"
+            title="Удалить учебник">
+            <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+          </button>
+          <button onclick="goAskBook('${escapeHtml(book.title)}')"
+            class="px-sm py-xs bg-surface text-primary border border-primary hover:bg-primary hover:text-on-primary rounded text-label-md transition-colors flex items-center gap-xs">
+            <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span> Спросить ИИ
+          </button>
+        </div>
       </div>`;
     grid.appendChild(card);
   });
+}
+
+async function deleteBook(filename) {
+  if (!confirm(`Удалить «${filename}»?`)) return;
+  await fetch('/api/books/' + encodeURIComponent(filename), { method: 'DELETE' });
+  loadBooks();
+  refreshDashboard();
 }
 
 async function deleteAllBooks() {

@@ -249,6 +249,12 @@ def delete_books(user: dict = Depends(require_user)):
     return {"status": "ok"}
 
 
+@app.delete("/api/books/{filename:path}")
+def delete_book(filename: str, user: dict = Depends(require_user)):
+    get_store(user["sub"]).delete_book(filename)
+    return {"status": "ok"}
+
+
 class AskRequest(BaseModel):
     question: str
     history: list[dict] = []
@@ -298,6 +304,12 @@ def ask_question(body: AskRequest, request: Request, user: dict = Depends(requir
 
         all_chunks.sort(key=lambda c: c.get("distance", 1.0))
         chunks = all_chunks[:top_k]
+
+        if not chunks:
+            yield f"data: {json.dumps({'type': 'token', 'text': 'В библиотеке нет загруженных учебников. Перейдите в «Центр загрузки» и добавьте PDF-файлы.'})}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+
         context_str = _build_context(chunks)
 
         history = [m for m in body.history if m.get("role") in ("user", "assistant")][-6:]
