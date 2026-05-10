@@ -3,9 +3,8 @@ import re
 from pathlib import Path
 
 
-def _extract_author(metadata: dict, filename: str) -> str:
-    for key in ("Author", "Creator", "author", "creator"):
-        val = metadata.get(key)
+def _extract_author(metadata, filename: str) -> str:
+    for val in (getattr(metadata, "author", None), getattr(metadata, "creator", None)):
         if val and isinstance(val, str) and val.strip():
             return val.strip()
     stem = Path(filename).stem
@@ -16,10 +15,10 @@ def _extract_author(metadata: dict, filename: str) -> str:
     return "Автор неизвестен"
 
 
-def _extract_title(metadata: dict, filename: str) -> str:
-    title = metadata.get("Title") or metadata.get("title")
-    if title and isinstance(title, str) and title.strip():
-        return title.strip()
+def _extract_title(metadata, filename: str) -> str:
+    val = getattr(metadata, "title", None)
+    if val and isinstance(val, str) and val.strip():
+        return val.strip()
     return Path(filename).stem.replace("_", " ")
 
 
@@ -52,7 +51,7 @@ def process_pdf(
     ocr_progress_cb=None,
     original_filename: str = None,
 ) -> list[dict]:
-    import pdfplumber
+    from pypdf import PdfReader
 
     max_chars = int(os.getenv("CHUNK_SIZE", 800)) * 4
     overlap_chars = int(os.getenv("CHUNK_OVERLAP", 100)) * 4
@@ -62,30 +61,30 @@ def process_pdf(
     all_chunks = []
 
     try:
-        with pdfplumber.open(file_path) as pdf:
-            metadata = pdf.metadata or {}
-            author = _extract_author(metadata, filename)
-            title = _extract_title(metadata, filename)
-            total_pages = len(pdf.pages)
+        reader = PdfReader(file_path)
+        metadata = reader.metadata or {}
+        author = _extract_author(metadata, filename)
+        title = _extract_title(metadata, filename)
+        total_pages = len(reader.pages)
 
-            for i, page in enumerate(pdf.pages):
-                if text_progress_cb:
-                    text_progress_cb(i + 1, total_pages)
-                try:
-                    text = page.extract_text(layout=True) or ""
-                except Exception:
-                    text = ""
-                if not text or len(text.strip()) < 20:
-                    continue
-                for j, chunk in enumerate(_chunk_text(text, max_chars, overlap_chars)):
-                    all_chunks.append({
-                        "text": chunk,
-                        "page": page.page_number,
-                        "filename": filename,
-                        "author": author,
-                        "title": title,
-                        "chunk_id": f"{stem}_p{page.page_number}_c{j}",
-                    })
+        for i, page in enumerate(reader.pages):
+            if text_progress_cb:
+                text_progress_cb(i + 1, total_pages)
+            try:
+                text = page.extract_text() or ""
+            except Exception:
+                text = ""
+            if not text or len(text.strip()) < 20:
+                continue
+            for j, chunk in enumerate(_chunk_text(text, max_chars, overlap_chars)):
+                all_chunks.append({
+                    "text": chunk,
+                    "page": i + 1,
+                    "filename": filename,
+                    "author": author,
+                    "title": title,
+                    "chunk_id": f"{stem}_p{i + 1}_c{j}",
+                })
 
     except RuntimeError:
         raise
