@@ -1,6 +1,5 @@
 openai>=1.52.0
 pdfplumber==0.11.4
-chromadb==0.5.15
 python-dotenv==1.0.1
 tiktoken>=0.8.0
 fastapi>=0.110.0
@@ -9,3 +8,4 @@ python-multipart>=0.0.9
 pytesseract>=0.3.10
 pdf2image>=1.17.0
 itsdangerous>=2.1.0
+numpy>=1.26.0
