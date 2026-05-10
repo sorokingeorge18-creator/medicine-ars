@@ -550,6 +550,19 @@ tailwind.config = {
           </div>
         </div>
 
+        <!-- Settings link (mobile only) -->
+        <button onclick="showPage('settings')"
+          class="md:hidden flex items-center gap-md w-full bg-surface-container-lowest border border-outline-variant rounded-2xl p-lg hover:bg-surface-container transition-colors">
+          <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-on-surface-variant" style="font-size:22px;">settings</span>
+          </div>
+          <div class="flex-1 text-left">
+            <p class="text-label-md font-semibold text-on-surface">Настройки</p>
+            <p class="text-label-sm text-on-surface-variant">Модель, параметры поиска</p>
+          </div>
+          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:20px;">chevron_right</span>
+        </button>
+
         <!-- Account -->
         <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl flex flex-col gap-lg">
           <h2 class="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Аккаунт</h2>
@@ -703,6 +716,13 @@ tailwind.config = {
     </div>
     <span style="font-size:10px;" class="font-medium mt-0.5">Загрузить</span>
   </button>
+  <button id="mob-nav-profile" onclick="showPage('profile')"
+    class="flex flex-col items-center justify-center flex-1 h-full text-on-surface-variant hover:text-primary transition-colors">
+    <div class="w-14 h-7 flex items-center justify-center rounded-full">
+      <span class="material-symbols-outlined" style="font-size:20px;">account_circle</span>
+    </div>
+    <span style="font-size:10px;" class="font-medium mt-0.5">Профиль</span>
+  </button>
 </nav>
 
 <!-- ================================================================
@@ -743,7 +763,7 @@ function showPage(page) {
   if (page === 'settings') loadSettingsForm();
 
   // Mobile bottom nav
-  ['dashboard','library','chat','upload'].forEach(p => {
+  ['dashboard','library','chat','upload','profile'].forEach(p => {
     const btn = document.getElementById(`mob-nav-${p}`);
     if (!btn) return;
     const pill = btn.querySelector('div');
