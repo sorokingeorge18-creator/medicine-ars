@@ -3,8 +3,9 @@ import re
 from pathlib import Path
 
 
-def _extract_author(metadata, filename: str) -> str:
-    for val in (getattr(metadata, "author", None), getattr(metadata, "creator", None)):
+def _extract_author(metadata: dict, filename: str) -> str:
+    for key in ("author", "Author", "creator", "Creator"):
+        val = metadata.get(key)
         if val and isinstance(val, str) and val.strip():
             return val.strip()
     stem = Path(filename).stem
@@ -15,8 +16,8 @@ def _extract_author(metadata, filename: str) -> str:
     return "Автор неизвестен"
 
 
-def _extract_title(metadata, filename: str) -> str:
-    val = getattr(metadata, "title", None)
+def _extract_title(metadata: dict, filename: str) -> str:
+    val = metadata.get("title") or metadata.get("Title")
     if val and isinstance(val, str) and val.strip():
         return val.strip()
     return Path(filename).stem.replace("_", " ")
@@ -51,7 +52,7 @@ def process_pdf(
     ocr_progress_cb=None,
     original_filename: str = None,
 ) -> list[dict]:
-    from pypdf import PdfReader
+    import fitz  # pymupdf
 
     max_chars = int(os.getenv("CHUNK_SIZE", 800)) * 4
     overlap_chars = int(os.getenv("CHUNK_OVERLAP", 100)) * 4
@@ -61,17 +62,18 @@ def process_pdf(
     all_chunks = []
 
     try:
-        reader = PdfReader(file_path)
-        metadata = reader.metadata or {}
+        doc = fitz.open(file_path)
+        metadata = doc.metadata or {}
         author = _extract_author(metadata, filename)
         title = _extract_title(metadata, filename)
-        total_pages = len(reader.pages)
+        total_pages = len(doc)
 
-        for i, page in enumerate(reader.pages):
+        for i in range(total_pages):
             if text_progress_cb:
                 text_progress_cb(i + 1, total_pages)
             try:
-                text = page.extract_text() or ""
+                page = doc[i]
+                text = page.get_text("text") or ""
             except Exception:
                 text = ""
             if not text or len(text.strip()) < 20:
@@ -85,6 +87,8 @@ def process_pdf(
                     "title": title,
                     "chunk_id": f"{stem}_p{i + 1}_c{j}",
                 })
+
+        doc.close()
 
     except RuntimeError:
         raise
