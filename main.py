@@ -1,16 +1,18 @@
 import asyncio
 import json
 import os
+import sqlite3
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
-from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
+from passlib.context import CryptContext
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
@@ -24,30 +26,65 @@ app = FastAPI(title="Медицинская библиотека")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "dev-secret-change-me"))
 
-oauth = OAuth()
-oauth.register(
-    name="google",
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
-)
+pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# ---------------------------------------------------------------------------
+# SQLite user storage
+# ---------------------------------------------------------------------------
+
+DB_PATH = Path("./chroma_db/users.db")
+
+
+def _db() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db() -> None:
+    with _db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                email    TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                name     TEXT NOT NULL
+            )
+        """)
+
+
+init_db()
+
+# ---------------------------------------------------------------------------
+# Per-user VectorStore cache
+# ---------------------------------------------------------------------------
 
 _stores: dict[str, VectorStore] = {}
+
 
 def get_store(user_id: str) -> VectorStore:
     if user_id not in _stores:
         _stores[user_id] = VectorStore(user_id=user_id)
     return _stores[user_id]
 
+
 executor = ThreadPoolExecutor(max_workers=2)
 
+
+# ---------------------------------------------------------------------------
+# Auth dependency
+# ---------------------------------------------------------------------------
 
 async def require_user(request: Request) -> dict:
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="Необходима авторизация")
     return user
+
+
+# ---------------------------------------------------------------------------
+# System prompt
+# ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT = """Ты — учебный ассистент по медицине. Твоя единственная задача — отвечать на вопросы, \
 используя ТОЛЬКО текст из фрагментов учебников, которые тебе предоставлены ниже.
@@ -77,6 +114,72 @@ def _build_context(chunks: list[dict]) -> str:
             f"{c['text']}"
         )
     return "\n\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# Auth endpoints
+# ---------------------------------------------------------------------------
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    name: str
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+@app.post("/auth/register")
+async def register(body: RegisterRequest, request: Request):
+    email = body.email.strip().lower()
+    name = body.name.strip()
+    if not email or not body.password or not name:
+        raise HTTPException(status_code=400, detail="Заполните все поля")
+    if len(body.password) < 6:
+        raise HTTPException(status_code=400, detail="Пароль должен быть не менее 6 символов")
+    hashed = pwd_ctx.hash(body.password)
+    try:
+        with _db() as conn:
+            cursor = conn.execute(
+                "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
+                (email, hashed, name),
+            )
+            user_id = str(cursor.lastrowid)
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=409, detail="Этот email уже зарегистрирован")
+    request.session["user"] = {"sub": user_id, "email": email, "name": name}
+    return {"status": "ok", "name": name, "email": email}
+
+
+@app.post("/auth/login")
+async def login(body: LoginRequest, request: Request):
+    email = body.email.strip().lower()
+    with _db() as conn:
+        row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    if not row or not pwd_ctx.verify(body.password, row["password"]):
+        raise HTTPException(status_code=401, detail="Неверный email или пароль")
+    request.session["user"] = {
+        "sub": str(row["id"]),
+        "email": row["email"],
+        "name": row["name"],
+    }
+    return {"status": "ok", "name": row["name"], "email": row["email"]}
+
+
+@app.get("/auth/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return {"status": "ok"}
+
+
+@app.get("/auth/me")
+async def get_me(request: Request):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401)
+    return user
 
 
 # ---------------------------------------------------------------------------
@@ -190,7 +293,6 @@ def ask_question(body: AskRequest, request: Request, user: dict = Depends(requir
             {"role": "user", "content": body.question},
         ]
 
-        # Stream answer
         stream = client.chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             messages=messages,
@@ -204,7 +306,6 @@ def ask_question(body: AskRequest, request: Request, user: dict = Depends(requir
             if delta.content:
                 yield f"data: {json.dumps({'type': 'token', 'text': delta.content})}\n\n"
 
-        # Send sources
         sources = [
             {"author": c["author"], "title": c["title"], "page": c["page"], "text": c["text"][:300]}
             for c in chunks
@@ -213,43 +314,6 @@ def ask_question(body: AskRequest, request: Request, user: dict = Depends(requir
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
-
-
-# ---------------------------------------------------------------------------
-# Auth endpoints
-# ---------------------------------------------------------------------------
-
-@app.get("/auth/google")
-async def auth_google(request: Request):
-    redirect_uri = os.getenv("BASE_URL", "http://localhost:8000") + "/auth/callback"
-    return await oauth.google.authorize_redirect(request, redirect_uri)
-
-
-@app.get("/auth/callback")
-async def auth_callback(request: Request):
-    token = await oauth.google.authorize_access_token(request)
-    user_info = token.get("userinfo")
-    request.session["user"] = {
-        "sub": user_info["sub"],
-        "name": user_info["name"],
-        "email": user_info["email"],
-        "picture": user_info.get("picture", ""),
-    }
-    return RedirectResponse("/")
-
-
-@app.get("/auth/logout")
-async def logout(request: Request):
-    request.session.clear()
-    return RedirectResponse("/")
-
-
-@app.get("/auth/me")
-async def get_me(request: Request):
-    user = request.session.get("user")
-    if not user:
-        raise HTTPException(status_code=401)
-    return user
 
 
 # ---------------------------------------------------------------------------

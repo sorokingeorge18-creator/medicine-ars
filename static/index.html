@@ -96,26 +96,81 @@ tailwind.config = {
 <!-- ================================================================
      LOGIN PAGE
      ================================================================ -->
-<div id="page-login" class="hidden fixed inset-0 bg-surface z-50 flex items-center justify-center p-xl">
-  <div class="w-full max-w-sm flex flex-col items-center gap-xl text-center">
-    <div class="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center">
-      <span class="material-symbols-outlined text-on-primary icon-fill" style="font-size:40px;">local_hospital</span>
+<div id="page-login" class="hidden fixed inset-0 bg-surface z-50 flex items-center justify-center p-xl overflow-y-auto">
+  <div class="w-full max-w-sm flex flex-col gap-lg py-xl">
+
+    <!-- Logo -->
+    <div class="flex flex-col items-center gap-md text-center">
+      <div class="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-on-primary icon-fill" style="font-size:32px;">local_hospital</span>
+      </div>
+      <div>
+        <h1 class="text-headline-md font-bold text-on-surface">Медицинская библиотека</h1>
+        <p class="text-label-md text-on-surface-variant mt-xs">Личная библиотека учебников с ИИ-ассистентом</p>
+      </div>
     </div>
-    <div>
-      <h1 class="text-display-lg font-bold text-on-surface">Медицинская<br>Библиотека</h1>
-      <p class="text-body-md text-on-surface-variant mt-md">Загружайте учебники и задавайте вопросы ИИ-ассистенту. Каждый пользователь имеет свою личную библиотеку.</p>
+
+    <!-- Tabs -->
+    <div class="bg-surface-container rounded-xl flex p-xs gap-xs">
+      <button id="tab-login-btn" onclick="switchAuthTab('login')"
+        class="flex-1 py-sm rounded-lg text-label-md font-semibold bg-surface-container-lowest shadow-sm text-on-surface transition-all">
+        Войти
+      </button>
+      <button id="tab-register-btn" onclick="switchAuthTab('register')"
+        class="flex-1 py-sm rounded-lg text-label-md font-semibold text-on-surface-variant transition-all">
+        Регистрация
+      </button>
     </div>
-    <a href="/auth/google"
-      class="w-full flex items-center justify-center gap-md bg-surface-container-lowest border border-outline-variant rounded-xl py-md px-lg text-body-md font-semibold text-on-surface hover:bg-surface-container transition-colors shadow-sm">
-      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-        <path fill="none" d="M0 0h48v48H0z"/>
-      </svg>
-      Войти через Google
-    </a>
+
+    <!-- Error -->
+    <div id="auth-error" class="hidden items-center gap-sm bg-error-container text-error rounded-lg px-md py-sm text-label-md">
+      <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+      <span id="auth-error-text"></span>
+    </div>
+
+    <!-- Login form -->
+    <div id="auth-login-form" class="flex flex-col gap-md">
+      <div class="flex flex-col gap-xs">
+        <label class="text-label-md font-medium text-on-surface">Email</label>
+        <input id="login-email" type="email" placeholder="doctor@example.com" autocomplete="email"
+          class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline"/>
+      </div>
+      <div class="flex flex-col gap-xs">
+        <label class="text-label-md font-medium text-on-surface">Пароль</label>
+        <input id="login-password" type="password" placeholder="••••••" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')submitLogin()"
+          class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline"/>
+      </div>
+      <button onclick="submitLogin()" id="login-btn"
+        class="w-full bg-primary text-on-primary rounded-lg py-sm px-md text-label-md font-semibold hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-sm">
+        Войти
+      </button>
+    </div>
+
+    <!-- Register form -->
+    <div id="auth-register-form" class="hidden flex-col gap-md">
+      <div class="flex flex-col gap-xs">
+        <label class="text-label-md font-medium text-on-surface">Имя</label>
+        <input id="reg-name" type="text" placeholder="Доктор Иванов" autocomplete="name"
+          class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline"/>
+      </div>
+      <div class="flex flex-col gap-xs">
+        <label class="text-label-md font-medium text-on-surface">Email</label>
+        <input id="reg-email" type="email" placeholder="doctor@example.com" autocomplete="email"
+          class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline"/>
+      </div>
+      <div class="flex flex-col gap-xs">
+        <label class="text-label-md font-medium text-on-surface">Пароль</label>
+        <input id="reg-password" type="password" placeholder="Минимум 6 символов" autocomplete="new-password"
+          onkeydown="if(event.key==='Enter')submitRegister()"
+          class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline"/>
+      </div>
+      <button onclick="submitRegister()" id="register-btn"
+        class="w-full bg-primary text-on-primary rounded-lg py-sm px-md text-label-md font-semibold hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-sm">
+        Создать аккаунт
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -498,20 +553,19 @@ tailwind.config = {
         <!-- Account -->
         <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl flex flex-col gap-lg">
           <h2 class="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Аккаунт</h2>
-          <div id="profile-google-info" class="flex items-center gap-md">
-            <div id="profile-google-avatar" class="w-10 h-10 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center overflow-hidden shrink-0">
+          <div class="flex items-center gap-md">
+            <div class="w-10 h-10 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center shrink-0">
               <span class="material-symbols-outlined text-on-surface-variant" style="font-size:22px;">account_circle</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p id="profile-google-name" class="text-label-md font-semibold text-on-surface truncate"></p>
-              <p id="profile-google-email" class="text-label-sm text-on-surface-variant truncate"></p>
+              <p id="profile-account-email" class="text-label-md font-semibold text-on-surface truncate"></p>
             </div>
           </div>
-          <a href="/auth/logout"
+          <button onclick="doLogout()"
             class="flex items-center justify-center gap-sm w-full border border-outline-variant rounded-lg py-sm px-md text-label-md font-medium text-on-surface-variant hover:bg-surface-container hover:text-error transition-colors">
             <span class="material-symbols-outlined" style="font-size:18px;">logout</span>
             Выйти из аккаунта
-          </a>
+          </button>
         </div>
 
       </div>
@@ -1231,19 +1285,102 @@ function hideLoginPage() {
   document.getElementById('page-login').classList.remove('flex');
 }
 
+function switchAuthTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('auth-login-form').classList.toggle('hidden', !isLogin);
+  document.getElementById('auth-login-form').classList.toggle('flex', isLogin);
+  document.getElementById('auth-register-form').classList.toggle('hidden', isLogin);
+  document.getElementById('auth-register-form').classList.toggle('flex', !isLogin);
+  document.getElementById('tab-login-btn').className =
+    'flex-1 py-sm rounded-lg text-label-md font-semibold transition-all ' +
+    (isLogin ? 'bg-surface-container-lowest shadow-sm text-on-surface' : 'text-on-surface-variant');
+  document.getElementById('tab-register-btn').className =
+    'flex-1 py-sm rounded-lg text-label-md font-semibold transition-all ' +
+    (!isLogin ? 'bg-surface-container-lowest shadow-sm text-on-surface' : 'text-on-surface-variant');
+  showAuthError('');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  if (msg) {
+    document.getElementById('auth-error-text').textContent = msg;
+    el.classList.remove('hidden'); el.classList.add('flex');
+  } else {
+    el.classList.add('hidden'); el.classList.remove('flex');
+  }
+}
+
+function setAuthLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Подождите...' : (btnId === 'login-btn' ? 'Войти' : 'Создать аккаунт');
+}
+
+async function submitLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showAuthError('Введите email и пароль'); return; }
+  setAuthLoading('login-btn', true);
+  showAuthError('');
+  try {
+    const resp = await fetch('/auth/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email, password}),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showAuthError(data.detail || 'Ошибка входа'); return; }
+    currentUser = data;
+    hideLoginPage();
+    updateUserUI(data);
+    applyProfile();
+    refreshDashboard();
+  } catch(e) {
+    showAuthError('Ошибка соединения');
+  } finally {
+    setAuthLoading('login-btn', false);
+  }
+}
+
+async function submitRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!name || !email || !password) { showAuthError('Заполните все поля'); return; }
+  setAuthLoading('register-btn', true);
+  showAuthError('');
+  try {
+    const resp = await fetch('/auth/register', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name, email, password}),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showAuthError(data.detail || 'Ошибка регистрации'); return; }
+    currentUser = data;
+    hideLoginPage();
+    updateUserUI(data);
+    applyProfile();
+    refreshDashboard();
+  } catch(e) {
+    showAuthError('Ошибка соединения');
+  } finally {
+    setAuthLoading('register-btn', false);
+  }
+}
+
+async function doLogout() {
+  await fetch('/auth/logout');
+  currentUser = null;
+  showLoginPage();
+  switchAuthTab('login');
+}
+
 function updateUserUI(user) {
-  // Sidebar name (use Google name if user hasn't customized)
   if (!localStorage.getItem('profile_name')) {
     document.getElementById('sidebar-name').textContent = user.name;
     document.getElementById('profile-display-name').textContent = user.name;
   }
-  // Google info in profile page
-  document.getElementById('profile-google-name').textContent = user.name;
-  document.getElementById('profile-google-email').textContent = user.email;
-  if (user.picture) {
-    document.getElementById('profile-google-avatar').innerHTML =
-      `<img src="${user.picture}" class="w-full h-full object-cover" referrerpolicy="no-referrer">`;
-  }
+  const emailEl = document.getElementById('profile-account-email');
+  if (emailEl) emailEl.textContent = user.email;
 }
 
 async function initAuth() {
