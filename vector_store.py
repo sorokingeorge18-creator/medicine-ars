@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import sqlite3
+import time
 from pathlib import Path
 
 import numpy as np
@@ -38,18 +39,28 @@ class VectorStore:
     # ------------------------------------------------------------------
 
     def _embed(self, texts: list[str]) -> list[list[float]]:
-        response = self.openai.embeddings.create(
-            model=self.embedding_model,
-            input=texts,
-        )
-        return [item.embedding for item in response.data]
+        for attempt in range(6):
+            try:
+                response = self.openai.embeddings.create(
+                    model=self.embedding_model,
+                    input=texts,
+                )
+                return [item.embedding for item in response.data]
+            except Exception as e:
+                msg = str(e)
+                if "429" in msg or "rate_limit" in msg.lower():
+                    wait = min(2 ** attempt, 60)
+                    time.sleep(wait)
+                else:
+                    raise
+        raise RuntimeError("OpenAI rate limit: превышено число попыток")
 
     # ------------------------------------------------------------------
     # Write
     # ------------------------------------------------------------------
 
     def add_chunks(self, chunks: list[dict]) -> None:
-        BATCH = 100
+        BATCH = 20
         for i in range(0, len(chunks), BATCH):
             batch = chunks[i : i + BATCH]
             embeddings = self._embed([c["text"] for c in batch])
