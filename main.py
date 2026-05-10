@@ -238,6 +238,20 @@ async def upload_pdf(file: UploadFile = File(...), user: dict = Depends(require_
         os.unlink(tmp_path)
 
 
+@app.get("/api/stats")
+def get_stats(user: dict = Depends(require_user)):
+    store = get_store(user["sub"])
+    books = store.list_books()
+    total_chunks = sum(b["chunk_count"] for b in books)
+    sample = store.sample_chunk()
+    return {
+        "books": len(books),
+        "total_chunks": total_chunks,
+        "db_path": str(store._db_path),
+        "sample_text": sample,
+    }
+
+
 @app.get("/api/books")
 def list_books(user: dict = Depends(require_user)):
     return get_store(user["sub"]).list_books()
@@ -295,18 +309,28 @@ def ask_question(body: AskRequest, request: Request, user: dict = Depends(requir
         # Search
         seen_ids: set[str] = set()
         all_chunks: list[dict] = []
-        for q in queries:
-            for chunk in user_store.search(q, top_k=top_k // len(queries) + 2):
-                cid = chunk.get("filename", "") + str(chunk.get("page", "")) + chunk["text"][:50]
-                if cid not in seen_ids:
-                    seen_ids.add(cid)
-                    all_chunks.append(chunk)
+        try:
+            for q in queries:
+                for chunk in user_store.search(q, top_k=top_k // len(queries) + 2):
+                    cid = chunk.get("filename", "") + str(chunk.get("page", "")) + chunk["text"][:50]
+                    if cid not in seen_ids:
+                        seen_ids.add(cid)
+                        all_chunks.append(chunk)
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'token', 'text': f'Ошибка поиска: {e}. Попробуйте ещё раз.'})}\n\n"
+            yield "data: [DONE]\n\n"
+            return
 
         all_chunks.sort(key=lambda c: c.get("distance", 1.0))
         chunks = all_chunks[:top_k]
 
         if not chunks:
-            yield f"data: {json.dumps({'type': 'token', 'text': 'В библиотеке нет загруженных учебников. Перейдите в «Центр загрузки» и добавьте PDF-файлы.'})}\n\n"
+            total = sum(b["chunk_count"] for b in user_store.list_books())
+            if total == 0:
+                msg = "В библиотеке нет загруженных учебников. Перейдите в «Центр загрузки» и добавьте PDF-файлы."
+            else:
+                msg = f"Поиск не нашёл подходящих фрагментов (в базе {total} фрагм.). Попробуйте переформулировать вопрос."
+            yield f"data: {json.dumps({'type': 'token', 'text': msg})}\n\n"
             yield "data: [DONE]\n\n"
             return
 
