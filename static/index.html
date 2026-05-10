@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html class="h-full" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Медицинская библиотека</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode:"class",
+  theme:{extend:{
+    colors:{
+      "surface-dim":"#d8dae2","on-secondary-container":"#006f67","primary-fixed":"#d6e3ff",
+      "surface-variant":"#e1e2ea","surface":"#f9f9ff","on-secondary":"#ffffff","error":"#ba1a1a",
+      "primary-container":"#005eb8","on-primary-fixed-variant":"#00468c","primary":"#00478d",
+      "surface-container-highest":"#e1e2ea","outline-variant":"#c2c6d4","on-primary":"#ffffff",
+      "on-background":"#191c21","primary-fixed-dim":"#a9c7ff","on-primary-container":"#c8daff",
+      "secondary-fixed-dim":"#5ddacd","secondary":"#006a63","outline":"#727783",
+      "secondary-container":"#79f3e7","on-secondary-fixed-variant":"#00504a",
+      "surface-container-high":"#e7e8f0","background":"#f9f9ff","on-primary-fixed":"#001b3d",
+      "on-surface-variant":"#424752","surface-container":"#ecedf6","on-surface":"#191c21",
+      "surface-tint":"#005db6","surface-container-low":"#f2f3fb",
+      "surface-container-lowest":"#ffffff","on-error":"#ffffff",
+      "secondary-fixed":"#7cf6ea","on-secondary-fixed":"#00201d"
+    },
+    borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},
+    spacing:{"xs":"4px","container-max":"1280px","md":"16px","unit":"4px","xl":"40px","sm":"8px","gutter":"24px","lg":"24px"},
+    fontSize:{
+      "headline-sm":["20px",{lineHeight:"28px",fontWeight:"600"}],
+      "label-md":["14px",{lineHeight:"20px",letterSpacing:"0.01em",fontWeight:"500"}],
+      "label-sm":["12px",{lineHeight:"16px",fontWeight:"600"}],
+      "headline-md":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"600"}],
+      "body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],
+      "display-lg":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}]
+    }
+  }}
+}
+</script>
+<style>
+  *{font-family:'Inter',sans-serif;box-sizing:border-box;}
+  body{min-height:100dvh;background:#f9f9ff;overflow:hidden;}
+  .material-symbols-outlined{
+    font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;
+    font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;
+    display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-smoothing:antialiased;
+    font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+  }
+  .icon-fill{font-variation-settings:'FILL' 1;}
+  .no-scrollbar::-webkit-scrollbar{display:none;}
+  .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
+  .content-page{display:none;}
+  .content-page.active{display:flex;}
+  .fade-in{animation:fadeIn 0.2s ease-out;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  .spin{animation:spin 1s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  .dot-pulse{display:flex;align-items:center;gap:4px;}
+  .dot-pulse span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00478d;animation:dotPulse 1.2s infinite;}
+  .dot-pulse span:nth-child(2){animation-delay:0.2s;}
+  .dot-pulse span:nth-child(3){animation-delay:0.4s;}
+  @keyframes dotPulse{0%,80%,100%{transform:scale(0.6);opacity:0.4;}40%{transform:scale(1);opacity:1;}}
+  .sources-panel{max-height:0;overflow:hidden;transition:max-height 0.3s ease-out;}
+  .sources-panel.open{max-height:800px;}
+  .drop-zone.drag-over{border-color:#00478d!important;background:#d6e3ff;}
+  .nav-item{transition:background 0.15s,color 0.15s;}
+  .nav-item.active{background:#79f3e7;color:#006f67;}
+  .nav-item.active .nav-icon{font-variation-settings:'FILL' 1;}
+  .nav-item:not(.active):hover{background:#e1e2ea;}
+  textarea{outline:none!important;box-shadow:none!important;border:none!important;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-thumb{background:#c2c6d4;border-radius:3px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  .prose p{margin-bottom:0.6rem;}
+  .prose ul{list-style:disc;margin-left:1.25rem;margin-bottom:0.6rem;}
+  .prose li{margin-bottom:0.2rem;}
+  .prose strong{font-weight:600;}
+  /* hero gradient */
+  .hero-gradient{
+    background:linear-gradient(135deg,#003a7a 0%,#00478d 40%,#005db6 100%);
+    position:relative;overflow:hidden;
+  }
+  .hero-gradient::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at 80% 50%,rgba(93,218,205,0.15) 0%,transparent 70%);
+  }
+  .hero-gradient::after{
+    content:'';position:absolute;top:-30%;right:-10%;width:50%;padding-bottom:50%;
+    border-radius:50%;background:rgba(255,255,255,0.04);
+  }
+</style>
+</head>
+<body class="h-full flex overflow-hidden text-on-background">
+
+<!-- ================================================================
+     DESKTOP SIDEBAR
+     ================================================================ -->
+<aside class="hidden md:flex h-full w-60 shrink-0 border-r border-outline-variant bg-surface-container-low flex-col z-20">
+
+  <!-- Brand + Avatar -->
+  <div class="px-lg pt-lg pb-md flex items-center gap-md cursor-pointer hover:bg-surface-variant rounded-lg mx-md transition-colors" onclick="showPage('profile')">
+    <div id="sidebar-avatar" class="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shrink-0 text-on-primary font-bold text-lg select-none">ДС</div>
+    <div class="flex flex-col overflow-hidden">
+      <span id="sidebar-name" class="text-label-md font-semibold text-on-surface leading-tight">Доктор Специалист</span>
+      <span id="sidebar-role" class="text-label-sm text-on-surface-variant leading-tight">Диагностическая радиология</span>
+    </div>
+  </div>
+
+  <div class="mx-md border-b border-outline-variant mb-sm"></div>
+
+  <!-- Nav -->
+  <nav class="flex-1 flex flex-col gap-xs px-md py-sm overflow-y-auto">
+    <button id="nav-dashboard" onclick="showPage('dashboard')"
+      class="nav-item active flex items-center gap-md px-md py-[10px] rounded-lg w-full text-left text-on-secondary-container font-medium text-label-md">
+      <span class="material-symbols-outlined nav-icon" style="font-size:20px;">dashboard</span>
+      Дашборд
+    </button>
+    <button id="nav-library" onclick="showPage('library')"
+      class="nav-item flex items-center gap-md px-md py-[10px] rounded-lg text-on-surface-variant w-full text-left font-medium text-label-md">
+      <span class="material-symbols-outlined nav-icon" style="font-size:20px;">folder_open</span>
+      Библиотека файлов
+    </button>
+    <button id="nav-chat" onclick="showPage('chat')"
+      class="nav-item flex items-center gap-md px-md py-[10px] rounded-lg text-on-surface-variant w-full text-left font-medium text-label-md">
+      <span class="material-symbols-outlined nav-icon" style="font-size:20px;">smart_toy</span>
+      AI-Ассистент
+    </button>
+    <button id="nav-upload" onclick="showPage('upload')"
+      class="nav-item flex items-center gap-md px-md py-[10px] rounded-lg text-on-surface-variant w-full text-left font-medium text-label-md">
+      <span class="material-symbols-outlined nav-icon" style="font-size:20px;">cloud_upload</span>
+      Центр загрузки
+    </button>
+  </nav>
+
+  <!-- New Analysis CTA -->
+  <div class="px-md pb-md">
+    <button onclick="showPage('upload')"
+      class="w-full bg-primary hover:bg-on-primary-fixed-variant text-on-primary rounded-lg py-[10px] px-md text-label-md flex justify-center items-center gap-sm transition-colors shadow-sm font-semibold">
+      <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+      Новый анализ
+    </button>
+  </div>
+
+  <div class="mx-md border-t border-outline-variant pt-sm pb-md flex flex-col gap-xs">
+    <button id="nav-profile" onclick="showPage('profile')"
+      class="nav-item flex items-center gap-md px-md py-[8px] rounded-lg text-on-surface-variant w-full text-left text-label-md font-medium">
+      <span class="material-symbols-outlined nav-icon" style="font-size:20px;">account_circle</span>
+      Профиль
+    </button>
+    <button id="nav-settings" onclick="showPage('settings')"
+      class="nav-item flex items-center gap-md px-md py-[8px] rounded-lg text-on-surface-variant w-full text-left text-label-md font-medium">
+      <span class="material-symbols-outlined nav-icon" style="font-size:20px;">settings</span>
+      Настройки
+    </button>
+  </div>
+</aside>
+
+<!-- ================================================================
+     MAIN AREA
+     ================================================================ -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+
+  <!-- ============================================================
+       DASHBOARD PAGE
+       ============================================================ -->
+  <div id="page-dashboard" class="content-page active flex-col h-full overflow-hidden">
+
+    <!-- Top bar -->
+    <header class="h-[60px] bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-xl shrink-0 z-10">
+      <h1 class="text-headline-sm font-semibold text-on-surface">Обзор</h1>
+    </header>
+
+    <!-- Scrollable content -->
+    <main class="flex-1 overflow-y-auto p-xl pb-24 md:pb-xl flex flex-col gap-xl">
+
+      <!-- Hero + Stats row -->
+      <div class="flex gap-gutter flex-col lg:flex-row">
+
+        <!-- Hero card -->
+        <div class="hero-gradient flex-1 rounded-2xl p-xl text-white relative min-h-[180px] flex flex-col justify-between">
+          <div class="relative z-10">
+            <h2 class="text-display-lg font-bold leading-tight mb-sm" id="dashboard-greeting">Добро пожаловать!</h2>
+            <p class="text-body-md text-white/80" id="dashboard-subtext">Загрузите учебники и начните задавать вопросы ИИ-ассистенту.</p>
+          </div>
+          <div class="relative z-10 mt-lg">
+            <button onclick="showPage('library')"
+              class="bg-white/15 hover:bg-white/25 border border-white/30 text-white rounded-lg px-lg py-sm text-label-md font-semibold transition-colors backdrop-blur-sm">
+              Перейти к библиотеке
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats card -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl flex flex-col items-center justify-center gap-md lg:w-56 shrink-0">
+          <div class="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center">
+            <span class="material-symbols-outlined text-on-secondary-container icon-fill" style="font-size:28px;">menu_book</span>
+          </div>
+          <div class="text-center">
+            <p class="text-display-lg font-bold text-on-surface" id="stat-books">0</p>
+            <p class="text-label-md text-on-surface-variant mt-xs">Учебников загружено</p>
+          </div>
+          <div class="w-full border-t border-outline-variant pt-md text-center">
+            <p class="text-headline-sm font-semibold text-secondary" id="stat-chunks">0</p>
+            <p class="text-label-sm text-on-surface-variant">фрагментов проиндексировано</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent activity table -->
+      <div class="flex flex-col gap-md">
+        <div class="flex items-center justify-between">
+          <h2 class="text-headline-sm font-semibold text-on-surface">Последние действия</h2>
+          <button onclick="showPage('upload')"
+            class="flex items-center gap-xs text-label-md text-on-surface border border-outline-variant rounded-lg px-md py-xs hover:bg-surface-variant transition-colors">
+            <span class="material-symbols-outlined" style="font-size:16px;">tune</span>
+            Загрузить ещё
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+          <!-- Header -->
+          <div class="grid grid-cols-[1fr_auto_auto_auto] gap-md px-lg py-sm border-b border-outline-variant bg-surface-container">
+            <span class="text-label-sm text-on-surface-variant">Название учебника</span>
+            <span class="text-label-sm text-on-surface-variant text-right hidden sm:block">Фрагментов</span>
+            <span class="text-label-sm text-on-surface-variant text-right">Статус</span>
+            <span class="text-label-sm text-on-surface-variant text-right">Действие</span>
+          </div>
+          <!-- Rows -->
+          <div id="dashboard-rows">
+            <!-- Empty state -->
+            <div id="dashboard-empty" class="flex flex-col items-center py-xl gap-md text-center">
+              <span class="material-symbols-outlined text-on-surface-variant" style="font-size:40px;">auto_stories</span>
+              <div>
+                <p class="text-label-md text-on-surface font-medium">Учебники не загружены</p>
+                <p class="text-label-sm text-on-surface-variant mt-xs">Загрузите PDF чтобы начать</p>
+              </div>
+              <button onclick="showPage('upload')"
+                class="bg-primary text-on-primary px-lg py-sm rounded-lg text-label-md font-medium hover:bg-on-primary-fixed-variant transition-colors">
+                <span class="material-symbols-outlined inline-block align-middle mr-xs" style="font-size:16px;">upload_file</span>
+                Загрузить учебник
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ============================================================
+       LIBRARY PAGE
+       ============================================================ -->
+  <div id="page-library" class="content-page flex-col h-full overflow-hidden">
+    <header class="h-[60px] bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-xl shrink-0 z-10">
+      <h1 class="text-headline-sm font-semibold text-on-surface">Библиотека файлов</h1>
+      <div class="flex items-center gap-md">
+        <div class="relative hidden sm:block">
+          <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style="font-size:18px;">search</span>
+          <input id="library-search" oninput="filterBooks()"
+            class="w-64 pl-xl pr-md py-[7px] bg-surface rounded-lg border border-outline-variant text-body-md text-on-surface focus:outline-none focus:border-primary transition-colors placeholder:text-outline text-sm"
+            placeholder="Поиск по названию или автору..." type="text"/>
+        </div>
+        <button onclick="showPage('upload')"
+          class="flex items-center gap-xs text-on-primary bg-primary px-md py-[7px] rounded-lg text-label-md font-medium hover:bg-on-primary-fixed-variant transition-colors">
+          <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+          <span class="hidden sm:inline">Загрузить</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="px-xl py-sm bg-surface-container-lowest border-b border-outline-variant shrink-0 flex items-center justify-between gap-md">
+      <p id="library-count" class="text-label-md text-on-surface-variant">Загрузка...</p>
+      <button id="delete-all-btn" onclick="deleteAllBooks()"
+        class="hidden items-center gap-xs text-label-md text-error border border-error/30 rounded-lg px-md py-xs hover:bg-error/5 transition-colors">
+        <span class="material-symbols-outlined" style="font-size:16px;">delete_forever</span>
+        Удалить все
+      </button>
+    </div>
+
+    <main id="books-grid" class="flex-1 overflow-y-auto p-xl pb-24 md:pb-xl">
+      <div id="library-empty" class="hidden flex-col items-center justify-center h-full text-center gap-lg">
+        <div class="w-20 h-20 rounded-2xl bg-surface-container flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:40px;">auto_stories</span>
+        </div>
+        <div>
+          <p class="text-headline-sm text-on-surface font-semibold">Учебники не загружены</p>
+          <p class="text-body-md text-on-surface-variant mt-xs">Загрузите PDF-учебники чтобы начать</p>
+        </div>
+        <button onclick="showPage('upload')"
+          class="bg-primary text-on-primary px-xl py-sm rounded-lg text-label-md font-medium hover:bg-on-primary-fixed-variant transition-colors">
+          <span class="material-symbols-outlined inline-block align-middle mr-xs" style="font-size:16px;">upload_file</span>
+          Загрузить учебник
+        </button>
+      </div>
+      <div id="books-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter"></div>
+    </main>
+  </div>
+
+  <!-- ============================================================
+       UPLOAD PAGE
+       ============================================================ -->
+  <div id="page-upload" class="content-page flex-col h-full overflow-hidden">
+    <header class="h-[60px] bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-xl shrink-0">
+      <h1 class="text-headline-sm font-semibold text-on-surface">Центр загрузки</h1>
+      <button onclick="showPage('dashboard')" class="p-sm text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-variant">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-xl flex flex-col gap-xl items-center pb-24 md:pb-xl">
+      <div class="w-full max-w-2xl flex flex-col gap-lg">
+        <div id="drop-zone"
+          class="drop-zone border-2 border-dashed border-outline-variant rounded-2xl p-xl flex flex-col items-center gap-md cursor-pointer hover:border-primary hover:bg-primary-fixed/10 transition-all"
+          onclick="document.getElementById('file-input').click()"
+          ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <div class="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary" style="font-size:36px;">upload_file</span>
+          </div>
+          <div class="text-center">
+            <p class="text-headline-sm text-on-surface font-semibold">Нажмите или перетащите PDF</p>
+            <p class="text-body-md text-on-surface-variant mt-xs">Поддерживаются большие файлы · Рус + Eng · OCR</p>
+          </div>
+          <div class="flex gap-sm flex-wrap justify-center">
+            <span class="text-label-sm text-on-surface-variant bg-surface-container px-md py-xs rounded-full border border-outline-variant">Текстовые PDF</span>
+            <span class="text-label-sm text-on-surface-variant bg-surface-container px-md py-xs rounded-full border border-outline-variant">Сканированные (OCR)</span>
+            <span class="text-label-sm text-on-surface-variant bg-surface-container px-md py-xs rounded-full border border-outline-variant">Любой размер</span>
+          </div>
+        </div>
+        <input id="file-input" type="file" accept=".pdf" multiple class="hidden" onchange="handleFileSelect(event)"/>
+
+        <div id="upload-status" class="hidden bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col gap-md">
+          <div class="flex items-center gap-md">
+            <div class="w-10 h-10 bg-primary-fixed rounded-lg flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-primary spin">progress_activity</span>
+            </div>
+            <div class="flex-1">
+              <p class="text-label-md text-on-surface font-medium" id="upload-status-title">Обрабатываю...</p>
+              <p class="text-label-sm text-on-surface-variant mt-xs" id="upload-status-sub">Извлекаю текст, индексирую фрагменты</p>
+            </div>
+          </div>
+          <div class="h-1.5 bg-surface-variant rounded-full overflow-hidden">
+            <div id="upload-progress-bar" class="h-full bg-primary rounded-full transition-all duration-500" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div id="upload-results" class="flex flex-col gap-sm"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================================================
+       CHAT PAGE
+       ============================================================ -->
+  <div id="page-chat" class="content-page flex-col h-full overflow-hidden">
+    <header class="h-[60px] bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-md md:px-xl shrink-0 z-20">
+      <div class="flex items-center gap-sm">
+        <button onclick="showPage('dashboard')" class="md:hidden p-sm text-on-surface-variant hover:text-primary transition-colors rounded-full">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div class="flex flex-col">
+          <span class="text-headline-sm text-primary font-semibold">AI-Ассистент</span>
+          <span class="text-label-sm text-on-surface-variant" id="chat-subtitle">Отвечаю только по загруженным учебникам</span>
+        </div>
+      </div>
+      <button onclick="showPage('library')"
+        class="hidden md:flex items-center gap-xs text-secondary text-label-md px-md py-sm rounded-lg border border-outline-variant hover:border-secondary transition-colors">
+        <span class="material-symbols-outlined" style="font-size:18px;">folder_open</span>
+        Учебники
+      </button>
+    </header>
+
+    <main id="chat-messages" class="flex-1 overflow-y-auto px-md md:px-xl py-lg flex flex-col gap-lg bg-surface">
+      <div id="chat-welcome" class="flex flex-col items-center justify-center flex-1 gap-lg text-center py-xl">
+        <div class="w-20 h-20 bg-primary-fixed rounded-2xl flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary icon-fill" style="font-size:40px;">smart_toy</span>
+        </div>
+        <div>
+          <p class="text-headline-sm text-on-surface font-semibold">Задайте вопрос</p>
+          <p class="text-body-md text-on-surface-variant mt-xs max-w-sm">Отвечаю только по загруженным учебникам, с указанием автора и страницы</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-sm flex-wrap justify-center">
+          <button onclick="setExampleQuestion('Что такое инфаркт миокарда?')"
+            class="bg-surface-container rounded-xl px-lg py-sm text-label-md text-on-surface hover:bg-surface-variant transition-colors border border-outline-variant">
+            Инфаркт миокарда
+          </button>
+          <button onclick="setExampleQuestion('Симптомы пневмонии')"
+            class="bg-surface-container rounded-xl px-lg py-sm text-label-md text-on-surface hover:bg-surface-variant transition-colors border border-outline-variant">
+            Симптомы пневмонии
+          </button>
+          <button onclick="setExampleQuestion('Диагностика диабета')"
+            class="bg-surface-container rounded-xl px-lg py-sm text-label-md text-on-surface hover:bg-surface-variant transition-colors border border-outline-variant">
+            Диагностика диабета
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <div class="bg-surface-container-lowest border-t border-outline-variant p-sm md:p-md shrink-0 z-20"
+      style="padding-bottom:max(8px,env(safe-area-inset-bottom));">
+      <div class="pb-14 md:pb-0">
+        <div class="max-w-3xl mx-auto flex items-end gap-sm bg-surface-container-low rounded-xl border border-outline-variant p-sm transition-colors focus-within:border-primary">
+          <textarea id="chat-input" rows="1"
+            class="flex-1 bg-transparent resize-none text-body-md text-on-surface placeholder:text-on-surface-variant min-h-[40px] max-h-[120px] py-[6px] px-xs leading-6"
+            placeholder="Задайте вопрос по учебникам..."
+            oninput="autoResize(this)" onkeydown="handleChatKey(event)"></textarea>
+          <button id="send-btn" onclick="sendMessage()" title="Отправить"
+            class="w-8 h-8 bg-primary text-on-primary hover:bg-on-primary-fixed-variant transition-colors rounded-lg self-end mb-[2px] flex items-center justify-center shrink-0 shadow-sm disabled:opacity-50">
+            <span class="material-symbols-outlined icon-fill" style="font-size:18px;">send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PROFILE PAGE
+       ============================================================ -->
+  <div id="page-profile" class="content-page flex-col h-full overflow-hidden">
+    <header class="h-[60px] bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-xl shrink-0">
+      <h1 class="text-headline-sm font-semibold text-on-surface">Профиль</h1>
+    </header>
+    <main class="flex-1 overflow-y-auto p-xl pb-24 md:pb-xl flex flex-col gap-xl items-center">
+      <div class="w-full max-w-lg flex flex-col gap-lg">
+
+        <!-- Avatar block -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl flex flex-col items-center gap-md">
+          <div id="profile-avatar-big" class="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center text-on-primary font-bold text-3xl select-none">ДС</div>
+          <div class="text-center">
+            <p id="profile-display-name" class="text-headline-sm font-semibold text-on-surface">Доктор Специалист</p>
+            <p id="profile-display-role" class="text-label-md text-on-surface-variant mt-xs">Диагностическая радиология</p>
+          </div>
+        </div>
+
+        <!-- Edit form -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl flex flex-col gap-lg">
+          <h2 class="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Личные данные</h2>
+
+          <div class="flex flex-col gap-xs">
+            <label class="text-label-md text-on-surface font-medium">Имя</label>
+            <input id="profile-name-input" type="text" placeholder="Доктор Специалист"
+              class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline"/>
+          </div>
+
+          <div class="flex flex-col gap-xs">
+            <label class="text-label-md text-on-surface font-medium">Специальность</label>
+            <input id="profile-role-input" type="text" placeholder="Диагностическая радиология"
+              class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline"/>
+          </div>
+
+          <div class="flex flex-col gap-xs">
+            <label class="text-label-md text-on-surface font-medium">Инициалы для аватара</label>
+            <input id="profile-initials-input" type="text" placeholder="ДС" maxlength="3"
+              class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-outline"
+              oninput="this.value=this.value.toUpperCase()"/>
+            <p class="text-label-sm text-on-surface-variant">До 3 букв, отображается в кружке</p>
+          </div>
+
+          <button onclick="saveProfile()"
+            class="w-full bg-primary text-on-primary rounded-lg py-sm px-md text-label-md font-semibold hover:bg-on-primary-fixed-variant transition-colors">
+            Сохранить изменения
+          </button>
+
+          <div id="profile-saved-msg" class="hidden items-center gap-sm text-secondary text-label-md font-medium">
+            <span class="material-symbols-outlined icon-fill" style="font-size:18px;">check_circle</span>
+            Сохранено!
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================================================
+       SETTINGS PAGE
+       ============================================================ -->
+  <div id="page-settings" class="content-page flex-col h-full overflow-hidden">
+    <header class="h-[60px] bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-xl shrink-0">
+      <h1 class="text-headline-sm font-semibold text-on-surface">Настройки</h1>
+    </header>
+    <main class="flex-1 overflow-y-auto p-xl pb-24 md:pb-xl flex flex-col gap-xl items-center">
+      <div class="w-full max-w-lg flex flex-col gap-lg">
+
+        <!-- AI settings -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl flex flex-col gap-lg">
+          <h2 class="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Параметры ИИ</h2>
+
+          <div class="flex flex-col gap-xs">
+            <label class="text-label-md text-on-surface font-medium">Модель OpenAI</label>
+            <div class="relative">
+              <select id="settings-model"
+                class="w-full appearance-none bg-surface border border-outline-variant rounded-lg px-md py-sm text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors pr-xl">
+                <option value="gpt-4o-mini">gpt-4o-mini (быстрее, дешевле)</option>
+                <option value="gpt-4o">gpt-4o (умнее, дороже)</option>
+                <option value="gpt-4-turbo">gpt-4-turbo</option>
+              </select>
+              <span class="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style="font-size:20px;">arrow_drop_down</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-xs">
+            <label class="text-label-md text-on-surface font-medium">Количество фрагментов в ответе <span id="topk-label" class="text-primary">20</span></label>
+            <input id="settings-topk" type="range" min="5" max="40" step="5" value="20"
+              oninput="document.getElementById('topk-label').textContent=this.value"
+              class="w-full accent-primary"/>
+            <p class="text-label-sm text-on-surface-variant">Больше фрагментов — полнее контекст, но медленнее ответ</p>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-label-md text-on-surface font-medium">Расширение запросов</p>
+              <p class="text-label-sm text-on-surface-variant mt-xs">Генерировать синонимы и варианты вопроса для лучшего поиска</p>
+            </div>
+            <button id="toggle-expansion" onclick="toggleSetting('expansion')"
+              class="w-12 h-6 rounded-full bg-secondary relative transition-colors shrink-0 ml-md">
+              <span class="absolute top-[3px] left-[3px] w-[18px] h-[18px] bg-white rounded-full transition-transform translate-x-6 shadow-sm"></span>
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-label-md text-on-source font-medium">Стриминг ответа</p>
+              <p class="text-label-sm text-on-surface-variant mt-xs">Показывать текст по мере генерации</p>
+            </div>
+            <button id="toggle-streaming" onclick="toggleSetting('streaming')"
+              class="w-12 h-6 rounded-full bg-secondary relative transition-colors shrink-0 ml-md">
+              <span class="absolute top-[3px] left-[3px] w-[18px] h-[18px] bg-white rounded-full transition-transform translate-x-6 shadow-sm"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Data -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl flex flex-col gap-md">
+          <h2 class="text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Данные</h2>
+
+          <div class="flex items-center justify-between py-sm border-b border-outline-variant">
+            <div>
+              <p class="text-label-md text-on-surface font-medium">Загружено учебников</p>
+              <p id="settings-books-count" class="text-label-sm text-on-surface-variant mt-xs">—</p>
+            </div>
+            <button onclick="showPage('library')" class="text-label-md text-primary font-medium hover:underline">Открыть</button>
+          </div>
+
+          <div class="flex items-center justify-between py-sm">
+            <div>
+              <p class="text-label-md text-on-surface font-medium text-error">Удалить все данные</p>
+              <p class="text-label-sm text-on-surface-variant mt-xs">Удалить все учебники и историю чата</p>
+            </div>
+            <button onclick="deleteAllBooks()"
+              class="px-md py-xs border border-error text-error rounded-lg text-label-md hover:bg-error/5 transition-colors font-medium">
+              Удалить
+            </button>
+          </div>
+        </div>
+
+        <!-- Save -->
+        <button onclick="saveSettings()"
+          class="w-full bg-primary text-on-primary rounded-lg py-sm px-md text-label-md font-semibold hover:bg-on-primary-fixed-variant transition-colors">
+          Сохранить настройки
+        </button>
+        <div id="settings-saved-msg" class="hidden items-center gap-sm text-secondary text-label-md font-medium justify-center">
+          <span class="material-symbols-outlined icon-fill" style="font-size:18px;">check_circle</span>
+          Настройки сохранены!
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+</div><!-- /main area -->
+
+<!-- ================================================================
+     MOBILE BOTTOM NAV
+     ================================================================ -->
+<nav class="md:hidden bg-surface-container-lowest border-t border-outline-variant flex justify-around items-center w-full fixed bottom-0 left-0 z-30"
+  style="padding-bottom:env(safe-area-inset-bottom);height:58px;">
+  <button id="mob-nav-dashboard" onclick="showPage('dashboard')"
+    class="flex flex-col items-center justify-center flex-1 h-full text-on-secondary-container">
+    <div class="w-14 h-7 flex items-center justify-center rounded-full bg-secondary-container">
+      <span class="material-symbols-outlined icon-fill" style="font-size:20px;">dashboard</span>
+    </div>
+    <span style="font-size:10px;" class="font-semibold mt-0.5">Обзор</span>
+  </button>
+  <button id="mob-nav-library" onclick="showPage('library')"
+    class="flex flex-col items-center justify-center flex-1 h-full text-on-surface-variant hover:text-primary transition-colors">
+    <div class="w-14 h-7 flex items-center justify-center rounded-full">
+      <span class="material-symbols-outlined" style="font-size:20px;">folder_open</span>
+    </div>
+    <span style="font-size:10px;" class="font-medium mt-0.5">Учебники</span>
+  </button>
+  <button id="mob-nav-chat" onclick="showPage('chat')"
+    class="flex flex-col items-center justify-center flex-1 h-full text-on-surface-variant hover:text-primary transition-colors">
+    <div class="w-14 h-7 flex items-center justify-center rounded-full">
+      <span class="material-symbols-outlined" style="font-size:20px;">smart_toy</span>
+    </div>
+    <span style="font-size:10px;" class="font-medium mt-0.5">Чат</span>
+  </button>
+  <button id="mob-nav-upload" onclick="showPage('upload')"
+    class="flex flex-col items-center justify-center flex-1 h-full text-on-surface-variant hover:text-primary transition-colors">
+    <div class="w-14 h-7 flex items-center justify-center rounded-full">
+      <span class="material-symbols-outlined" style="font-size:20px;">upload_file</span>
+    </div>
+    <span style="font-size:10px;" class="font-medium mt-0.5">Загрузить</span>
+  </button>
+</nav>
+
+<!-- ================================================================
+     JAVASCRIPT
+     ================================================================ -->
+<script>
+// ── State ──────────────────────────────────────────────────────────
+let chatHistory = [];
+let isGenerating = false;
+let currentPage = 'dashboard';
+let allBooks = [];
+
+// ── Navigation ────────────────────────────────────────────────────
+const PAGES = ['dashboard','library','upload','chat','profile','settings'];
+
+function showPage(page) {
+  currentPage = page;
+  PAGES.forEach(p => {
+    document.getElementById(`page-${p}`)?.classList.remove('active');
+  });
+  document.getElementById(`page-${page}`)?.classList.add('active');
+
+  // Desktop sidebar
+  PAGES.forEach(p => {
+    const btn = document.getElementById(`nav-${p}`);
+    if (!btn) return;
+    if (p === page) {
+      btn.classList.add('active','text-on-secondary-container');
+      btn.classList.remove('text-on-surface-variant');
+    } else {
+      btn.classList.remove('active','text-on-secondary-container');
+      btn.classList.add('text-on-surface-variant');
+    }
+  });
+
+  if (page === 'profile') loadProfileForm();
+  if (page === 'settings') loadSettingsForm();
+
+  // Mobile bottom nav
+  ['dashboard','library','chat','upload'].forEach(p => {
+    const btn = document.getElementById(`mob-nav-${p}`);
+    if (!btn) return;
+    const pill = btn.querySelector('div');
+    const label = btn.querySelector('span:last-child');
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (p === page) {
+      btn.classList.add('text-on-secondary-container');
+      btn.classList.remove('text-on-surface-variant','hover:text-primary');
+      pill?.classList.add('bg-secondary-container');
+      label?.classList.replace('font-medium','font-semibold');
+      icon?.classList.add('icon-fill');
+    } else {
+      btn.classList.remove('text-on-secondary-container');
+      btn.classList.add('text-on-surface-variant','hover:text-primary');
+      pill?.classList.remove('bg-secondary-container');
+      label?.classList.replace('font-semibold','font-medium');
+      icon?.classList.remove('icon-fill');
+    }
+  });
+
+  if (page === 'dashboard') refreshDashboard();
+  if (page === 'library') loadBooks();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────
+function refreshDashboard() {
+  // Greeting by time
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
+  document.getElementById('dashboard-greeting').textContent = greet + ', доктор!';
+
+  fetch('/api/books').then(r => r.json()).then(books => {
+    allBooks = books;
+    const chunks = books.reduce((s,b) => s + b.chunk_count, 0);
+    document.getElementById('stat-books').textContent = books.length;
+    document.getElementById('stat-chunks').textContent = chunks.toLocaleString('ru');
+
+    if (books.length > 0) {
+      document.getElementById('dashboard-subtext').textContent =
+        `Загружено ${books.length} учебн. · ${chunks.toLocaleString('ru')} фрагментов проиндексировано.`;
+    }
+
+    renderDashboardRows(books);
+  }).catch(console.error);
+}
+
+function renderDashboardRows(books) {
+  const container = document.getElementById('dashboard-rows');
+  const empty = document.getElementById('dashboard-empty');
+
+  // Remove old rows (keep empty state)
+  container.querySelectorAll('.dash-row').forEach(el => el.remove());
+
+  if (books.length === 0) {
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  books.forEach((book, i) => {
+    const row = document.createElement('div');
+    row.className = 'dash-row grid grid-cols-[1fr_auto_auto_auto] gap-md px-lg py-md items-center fade-in' +
+      (i < books.length - 1 ? ' border-b border-outline-variant' : '');
+    row.innerHTML = `
+      <div class="flex items-center gap-md min-w-0">
+        <div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center shrink-0 border border-outline-variant">
+          <span class="material-symbols-outlined text-primary" style="font-size:18px;">menu_book</span>
+        </div>
+        <div class="min-w-0">
+          <p class="text-label-md text-on-surface font-medium truncate">${escapeHtml(book.title)}</p>
+          <p class="text-label-sm text-on-surface-variant truncate">${escapeHtml(book.author)}</p>
+        </div>
+      </div>
+      <span class="text-label-sm text-on-surface-variant text-right hidden sm:block" style="font-family:'JetBrains Mono',monospace;">${book.chunk_count}</span>
+      <span class="flex items-center gap-xs text-label-sm px-sm py-[3px] bg-surface-container text-on-surface rounded-full border border-outline-variant whitespace-nowrap">
+        <span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>Загружено
+      </span>
+      <button onclick="goAskBook('${escapeHtml(book.title)}')"
+        class="px-sm py-[4px] text-primary border border-primary hover:bg-primary hover:text-on-primary rounded text-label-md transition-colors flex items-center gap-xs whitespace-nowrap">
+        <span class="material-symbols-outlined" style="font-size:15px;">smart_toy</span>
+        <span class="hidden sm:inline">Спросить ИИ</span>
+      </button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function goAskBook(title) {
+  showPage('chat');
+  setTimeout(() => {
+    document.getElementById('chat-input').value = `Расскажи об основных темах учебника «${title}»`;
+    autoResize(document.getElementById('chat-input'));
+  }, 50);
+}
+
+// ── Library ───────────────────────────────────────────────────────
+async function loadBooks() {
+  try {
+    const resp = await fetch('/api/books');
+    allBooks = await resp.json();
+    renderBooks(allBooks);
+  } catch(e) { console.error(e); }
+}
+
+function filterBooks() {
+  const q = document.getElementById('library-search').value.toLowerCase();
+  renderBooks(allBooks.filter(b =>
+    b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)));
+}
+
+function renderBooks(books) {
+  const grid = document.getElementById('books-cards');
+  const empty = document.getElementById('library-empty');
+  const countEl = document.getElementById('library-count');
+  const deleteBtn = document.getElementById('delete-all-btn');
+
+  grid.innerHTML = '';
+  if (books.length === 0) {
+    empty.classList.remove('hidden'); empty.classList.add('flex');
+    countEl.textContent = 'Учебники не загружены';
+    deleteBtn.classList.add('hidden'); deleteBtn.classList.remove('flex');
+    return;
+  }
+  empty.classList.add('hidden'); empty.classList.remove('flex');
+  deleteBtn.classList.remove('hidden'); deleteBtn.classList.add('flex');
+  countEl.textContent = `${books.length} учебн. · ${books.reduce((s,b)=>s+b.chunk_count,0).toLocaleString('ru')} фрагментов`;
+
+  books.forEach(book => {
+    const card = document.createElement('div');
+    card.className = 'book-card bg-surface-container-lowest rounded-xl p-md flex flex-col gap-md ring-1 ring-inset ring-outline-variant hover:ring-2 hover:ring-secondary transition-all group h-full fade-in cursor-default';
+    card.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center border border-outline-variant group-hover:bg-secondary-container transition-colors">
+          <span class="material-symbols-outlined text-on-surface group-hover:text-on-secondary-container" style="font-size:28px;">menu_book</span>
+        </div>
+        <span class="text-label-sm px-sm py-[2px] bg-surface-container text-on-surface rounded-full flex items-center gap-xs border border-outline-variant">
+          <span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>Загружено
+        </span>
+      </div>
+      <div class="flex-1 mt-sm">
+        <h3 class="text-headline-sm text-on-surface mb-xs group-hover:text-primary transition-colors line-clamp-2">${escapeHtml(book.title)}</h3>
+        <p class="text-label-md text-on-surface-variant">${escapeHtml(book.author)}</p>
+      </div>
+      <div class="flex items-center justify-between pt-sm border-t border-surface-container-high mt-auto">
+        <div class="text-outline" style="font-family:'JetBrains Mono',monospace;font-size:12px;">PDF · ${book.chunk_count} фрагм.</div>
+        <button onclick="goAskBook('${escapeHtml(book.title)}')"
+          class="px-sm py-xs bg-surface text-primary border border-primary hover:bg-primary hover:text-on-primary rounded text-label-md transition-colors flex items-center gap-xs">
+          <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span> Спросить ИИ
+        </button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+async function deleteAllBooks() {
+  if (!confirm('Удалить все загруженные учебники?')) return;
+  await fetch('/api/books', { method:'DELETE' });
+  chatHistory = [];
+  allBooks = [];
+  document.getElementById('chat-subtitle').textContent = 'Отвечаю только по загруженным учебникам';
+  resetChatWelcome();
+  loadBooks();
+  refreshDashboard();
+}
+
+function resetChatWelcome() {
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML = `<div id="chat-welcome" class="flex flex-col items-center justify-center flex-1 gap-lg text-center py-xl">
+    <div class="w-20 h-20 bg-primary-fixed rounded-2xl flex items-center justify-center">
+      <span class="material-symbols-outlined text-primary icon-fill" style="font-size:40px;">smart_toy</span>
+    </div>
+    <div>
+      <p class="text-headline-sm text-on-surface font-semibold">Задайте вопрос</p>
+      <p class="text-body-md text-on-surface-variant mt-xs max-w-sm">Отвечаю только по загруженным учебникам, с указанием автора и страницы</p>
+    </div>
+  </div>`;
+}
+
+// ── Upload ────────────────────────────────────────────────────────
+function onDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
+function onDragLeave(e) { document.getElementById('drop-zone').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.pdf'));
+  if (files.length) uploadFiles(files);
+}
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  if (files.length) uploadFiles(files);
+  e.target.value = '';
+}
+
+async function uploadFiles(files) {
+  const statusEl = document.getElementById('upload-status');
+  const titleEl  = document.getElementById('upload-status-title');
+  const subEl    = document.getElementById('upload-status-sub');
+  const bar      = document.getElementById('upload-progress-bar');
+  const results  = document.getElementById('upload-results');
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    statusEl.classList.remove('hidden');
+    titleEl.textContent = `Обрабатываю «${file.name}» (${i+1}/${files.length})`;
+    subEl.textContent = 'Извлекаю текст, запускаю OCR, индексирую...';
+    bar.style.width = '12%';
+
+    let pct = 12;
+    const ticker = setInterval(() => {
+      pct = Math.min(pct + Math.random() * 4, 85);
+      bar.style.width = pct + '%';
+    }, 700);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    let resultHtml = '';
+
+    try {
+      const resp = await fetch('/api/upload', { method:'POST', body:formData });
+      const data = await resp.json();
+      clearInterval(ticker);
+      bar.style.width = '100%';
+
+      if (!resp.ok) {
+        resultHtml = `<div class="flex items-center gap-md p-md bg-error-container rounded-xl border border-error/20">
+          <span class="material-symbols-outlined text-error">error</span>
+          <div><p class="text-label-md font-medium text-error">Ошибка: ${escapeHtml(data.detail||'неизвестная')}</p>
+          <p class="text-label-sm text-on-surface-variant">${escapeHtml(file.name)}</p></div></div>`;
+      } else if (data.status === 'exists') {
+        resultHtml = `<div class="flex items-center gap-md p-md bg-surface-container rounded-xl border border-outline-variant">
+          <span class="material-symbols-outlined text-outline">info</span>
+          <div><p class="text-label-md font-medium text-on-surface">«${escapeHtml(file.name)}» уже загружена</p>
+          <p class="text-label-sm text-on-surface-variant">Учебник уже проиндексирован</p></div></div>`;
+      } else {
+        resultHtml = `<div class="flex items-center gap-md p-md bg-surface-container rounded-xl border border-outline-variant">
+          <span class="material-symbols-outlined text-secondary icon-fill">check_circle</span>
+          <div><p class="text-label-md font-medium text-on-surface">«${escapeHtml(data.title)}»</p>
+          <p class="text-label-sm text-on-surface-variant">${escapeHtml(data.author)} · ${data.chunks} фрагментов</p></div></div>`;
+        await fetch('/api/books').then(r=>r.json()).then(b => {
+          allBooks = b;
+          document.getElementById('chat-subtitle').textContent =
+            `${b.length} учебн. загружено · Ответы со ссылками на страницы`;
+        });
+      }
+    } catch(e) {
+      clearInterval(ticker);
+      resultHtml = `<div class="flex items-center gap-md p-md bg-error-container rounded-xl">
+        <span class="material-symbols-outlined text-error">error</span>
+        <p class="text-label-md text-error">Ошибка: ${escapeHtml(e.message)}</p></div>`;
+    }
+
+    results.insertAdjacentHTML('afterbegin', `<div class="fade-in">${resultHtml}</div>`);
+    await sleep(300);
+  }
+
+  statusEl.classList.add('hidden');
+  bar.style.width = '0%';
+}
+
+// ── Chat ──────────────────────────────────────────────────────────
+function setExampleQuestion(q) {
+  const input = document.getElementById('chat-input');
+  input.value = q; autoResize(input); input.focus();
+}
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+function handleChatKey(e) { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function appendUserMsg(text) {
+  document.getElementById('chat-welcome')?.remove();
+  const c = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.className = 'flex flex-col items-end w-full fade-in';
+  el.innerHTML = `<div class="bg-primary text-on-primary p-md rounded-2xl rounded-tr-none max-w-[85%] md:max-w-[70%] shadow-sm">
+    <p class="text-body-md">${escapeHtml(text)}</p></div>`;
+  c.appendChild(el); c.scrollTop = c.scrollHeight;
+}
+
+function showThinking() {
+  const c = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.id = 'thinking-indicator';
+  el.className = 'flex flex-col items-start w-full gap-xs fade-in';
+  el.innerHTML = `
+    <div class="flex items-center gap-sm px-sm">
+      <span class="material-symbols-outlined text-secondary icon-fill" style="font-size:20px;">smart_toy</span>
+      <span class="text-label-sm text-on-surface-variant font-semibold">Медицинская библиотека</span>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant px-md py-[10px] rounded-2xl rounded-tl-none shadow-[0px_8px_12px_-3px_rgba(0,94,184,0.06)] flex items-center gap-md">
+      <div class="dot-pulse"><span></span><span></span><span></span></div>
+      <span class="text-label-md text-on-surface-variant">Ищу в учебниках...</span>
+    </div>`;
+  c.appendChild(el); c.scrollTop = c.scrollHeight;
+}
+
+function removeThinking() { document.getElementById('thinking-indicator')?.remove(); }
+
+function createAiBubble() {
+  document.getElementById('chat-welcome')?.remove();
+  const c = document.getElementById('chat-messages');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flex flex-col items-start w-full gap-xs fade-in';
+  wrapper.innerHTML = `<div class="flex items-center gap-sm px-sm">
+    <span class="material-symbols-outlined text-secondary icon-fill" style="font-size:20px;">smart_toy</span>
+    <span class="text-label-sm text-on-surface-variant font-semibold">Медицинская библиотека</span>
+  </div>`;
+  const bubble = document.createElement('div');
+  bubble.className = 'bg-surface-container-lowest border border-outline-variant p-md rounded-2xl rounded-tl-none max-w-[95%] md:max-w-[80%] shadow-[0px_8px_12px_-3px_rgba(0,94,184,0.06)] flex flex-col gap-md';
+  const textDiv = document.createElement('div');
+  textDiv.className = 'text-body-md text-on-surface';
+  bubble.appendChild(textDiv);
+  wrapper.appendChild(bubble);
+  c.appendChild(wrapper);
+  return { wrapper, bubble, textDiv };
+}
+
+function buildSourcesEl(sources) {
+  const div = document.createElement('div');
+  div.className = 'w-full max-w-[95%] md:max-w-[80%]';
+  div.innerHTML = `
+    <button onclick="toggleSources(this)" class="flex items-center gap-xs text-label-sm text-on-surface-variant hover:text-primary transition-colors px-sm py-xs">
+      <span class="material-symbols-outlined" style="font-size:16px;">expand_more</span>
+      <span>Источники (${sources.length})</span>
+    </button>
+    <div class="sources-panel flex flex-col gap-sm px-sm">
+      ${sources.map((s,i)=>`
+        <div class="bg-surface-container rounded-lg p-sm border border-outline-variant">
+          <p class="text-label-md text-on-surface font-medium">[${i+1}] ${escapeHtml(s.author)}, «${escapeHtml(s.title)}», стр. ${s.page}</p>
+          <p class="text-label-sm text-on-surface-variant mt-xs line-clamp-3">${escapeHtml(s.text)}</p>
+        </div>`).join('')}
+    </div>`;
+  return div;
+}
+
+function toggleSources(btn) {
+  const panel = btn.nextElementSibling;
+  const icon = btn.querySelector('.material-symbols-outlined');
+  panel.classList.toggle('open');
+  icon.textContent = panel.classList.contains('open') ? 'expand_less' : 'expand_more';
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`(.+?)`/g,'<code style="background:#ecedf6;padding:0 3px;border-radius:3px;font-family:monospace;font-size:13px;">$1</code>')
+    .replace(/^### (.+)$/gm,'<h3 style="font-weight:600;margin:10px 0 3px;font-size:15px;">$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2 style="font-weight:600;margin:10px 0 3px;font-size:17px;">$1</h2>')
+    .replace(/^\- (.+)$/gm,'<li style="margin-left:16px;list-style:disc;margin-bottom:2px;">$1</li>')
+    .replace(/(<li[^>]*>.*?<\/li>\n?)+/gs,'<ul style="margin-bottom:8px;">$&</ul>')
+    .replace(/\n\n/g,'</p><p style="margin-bottom:8px;">')
+    .replace(/\n/g,'<br>');
+}
+
+async function sendMessage() {
+  if (isGenerating) return;
+  const input = document.getElementById('chat-input');
+  const question = input.value.trim();
+  if (!question) return;
+
+  isGenerating = true;
+  input.value = ''; input.style.height = 'auto';
+  document.getElementById('send-btn').disabled = true;
+  appendUserMsg(question);
+  showThinking();
+
+  try {
+    const resp = await fetch('/api/ask', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question, history:chatHistory.slice(-6)}),
+    });
+    if (!resp.ok) {
+      removeThinking();
+      const {textDiv} = createAiBubble();
+      textDiv.textContent = 'Ошибка при обращении к серверу. Попробуйте ещё раз.';
+      return;
+    }
+    removeThinking();
+    const {wrapper, textDiv} = createAiBubble();
+    let fullText = '', sources = [];
+    const c = document.getElementById('chat-messages');
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const {done,value} = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value,{stream:true});
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') break;
+        try {
+          const ev = JSON.parse(data);
+          if (ev.type==='token') { fullText+=ev.text; textDiv.innerHTML=renderMarkdown(fullText); c.scrollTop=c.scrollHeight; }
+          else if (ev.type==='sources') sources=ev.sources;
+        } catch {}
+      }
+    }
+
+    if (sources.length > 0) wrapper.appendChild(buildSourcesEl(sources));
+    chatHistory.push({role:'user',content:question});
+    chatHistory.push({role:'assistant',content:fullText});
+
+  } catch(e) {
+    removeThinking();
+    const {textDiv} = createAiBubble();
+    textDiv.textContent = 'Ошибка соединения. Проверьте, что сервер запущен.';
+  } finally {
+    isGenerating = false;
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+  }
+}
+
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+// ── Profile ───────────────────────────────────────────────────────
+function getProfile() {
+  return {
+    name:     localStorage.getItem('profile_name')     || 'Доктор Специалист',
+    role:     localStorage.getItem('profile_role')     || 'Диагностическая радиология',
+    initials: localStorage.getItem('profile_initials') || 'ДС',
+  };
+}
+
+function applyProfile() {
+  const p = getProfile();
+  // Sidebar
+  document.getElementById('sidebar-name').textContent = p.name;
+  document.getElementById('sidebar-role').textContent = p.role;
+  document.getElementById('sidebar-avatar').textContent = p.initials;
+  // Profile page display
+  document.getElementById('profile-display-name').textContent = p.name;
+  document.getElementById('profile-display-role').textContent = p.role;
+  document.getElementById('profile-avatar-big').textContent = p.initials;
+  // Dashboard greeting
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
+  const shortName = p.name.split(' ').slice(-1)[0]; // last word
+  const el = document.getElementById('dashboard-greeting');
+  if (el) el.textContent = `${greet}, ${shortName}!`;
+}
+
+function loadProfileForm() {
+  const p = getProfile();
+  document.getElementById('profile-name-input').value     = p.name;
+  document.getElementById('profile-role-input').value     = p.role;
+  document.getElementById('profile-initials-input').value = p.initials;
+  applyProfile();
+}
+
+function saveProfile() {
+  const name     = document.getElementById('profile-name-input').value.trim()     || 'Доктор Специалист';
+  const role     = document.getElementById('profile-role-input').value.trim()     || 'Диагностическая радиология';
+  const initials = document.getElementById('profile-initials-input').value.trim() || 'ДС';
+
+  localStorage.setItem('profile_name',     name);
+  localStorage.setItem('profile_role',     role);
+  localStorage.setItem('profile_initials', initials);
+
+  applyProfile();
+
+  const msg = document.getElementById('profile-saved-msg');
+  msg.classList.remove('hidden'); msg.classList.add('flex');
+  setTimeout(() => { msg.classList.add('hidden'); msg.classList.remove('flex'); }, 2500);
+}
+
+// ── Settings ──────────────────────────────────────────────────────
+const SETTINGS_DEFAULTS = { model:'gpt-4o-mini', topk:20, expansion:true, streaming:true };
+
+function getSettings() {
+  return {
+    model:     localStorage.getItem('cfg_model')     || SETTINGS_DEFAULTS.model,
+    topk:      parseInt(localStorage.getItem('cfg_topk'))  || SETTINGS_DEFAULTS.topk,
+    expansion: localStorage.getItem('cfg_expansion') !== 'false',
+    streaming: localStorage.getItem('cfg_streaming') !== 'false',
+  };
+}
+
+function loadSettingsForm() {
+  const s = getSettings();
+  document.getElementById('settings-model').value = s.model;
+  document.getElementById('settings-topk').value  = s.topk;
+  document.getElementById('topk-label').textContent = s.topk;
+  setToggleUI('expansion', s.expansion);
+  setToggleUI('streaming',  s.streaming);
+  // Books count
+  fetch('/api/books').then(r=>r.json()).then(books => {
+    document.getElementById('settings-books-count').textContent =
+      `${books.length} учебн. · ${books.reduce((s,b)=>s+b.chunk_count,0).toLocaleString('ru')} фрагментов`;
+  }).catch(()=>{});
+}
+
+function setToggleUI(key, enabled) {
+  const btn   = document.getElementById(`toggle-${key}`);
+  const thumb = btn?.querySelector('span');
+  if (!btn) return;
+  if (enabled) {
+    btn.classList.add('bg-secondary');   btn.classList.remove('bg-surface-variant');
+    thumb?.classList.add('translate-x-6'); thumb?.classList.remove('translate-x-0');
+  } else {
+    btn.classList.remove('bg-secondary'); btn.classList.add('bg-surface-variant');
+    thumb?.classList.remove('translate-x-6'); thumb?.classList.add('translate-x-0');
+  }
+}
+
+function toggleSetting(key) {
+  const s = getSettings();
+  s[key] = !s[key];
+  localStorage.setItem(`cfg_${key}`, s[key]);
+  setToggleUI(key, s[key]);
+}
+
+function saveSettings() {
+  localStorage.setItem('cfg_model', document.getElementById('settings-model').value);
+  localStorage.setItem('cfg_topk',  document.getElementById('settings-topk').value);
+
+  const msg = document.getElementById('settings-saved-msg');
+  msg.classList.remove('hidden'); msg.classList.add('flex');
+  setTimeout(() => { msg.classList.add('hidden'); msg.classList.remove('flex'); }, 2500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+applyProfile();
+refreshDashboard();
+</script>
+</body>
+</html>
