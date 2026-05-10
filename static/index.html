@@ -958,69 +958,76 @@ function handleFileSelect(e) {
 }
 
 async function uploadFiles(files) {
-  const statusEl = document.getElementById('upload-status');
-  const titleEl  = document.getElementById('upload-status-title');
-  const subEl    = document.getElementById('upload-status-sub');
-  const bar      = document.getElementById('upload-progress-bar');
-  const results  = document.getElementById('upload-results');
+  const results = document.getElementById('upload-results');
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    statusEl.classList.remove('hidden');
-    titleEl.textContent = `Обрабатываю «${file.name}» (${i+1}/${files.length})`;
-    subEl.textContent = 'Извлекаю текст, запускаю OCR, индексирую...';
-    bar.style.width = '12%';
+  // Create a status card for each file immediately
+  const tasks = files.map(file => {
+    const card = document.createElement('div');
+    card.className = 'flex items-center gap-md p-md bg-surface-container-lowest border border-outline-variant rounded-xl fade-in';
+    card.innerHTML = `
+      <div class="w-10 h-10 bg-primary-fixed rounded-lg flex items-center justify-center shrink-0 card-icon-wrap">
+        <span class="material-symbols-outlined text-primary spin card-icon">progress_activity</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-label-md font-medium text-on-surface truncate card-name">${escapeHtml(file.name)}</p>
+        <p class="text-label-sm text-on-surface-variant card-status">Загружаю...</p>
+      </div>`;
+    results.insertAdjacentElement('afterbegin', card);
+    return { file, card };
+  });
 
-    let pct = 12;
-    const ticker = setInterval(() => {
-      pct = Math.min(pct + Math.random() * 4, 85);
-      bar.style.width = pct + '%';
-    }, 700);
+  // Upload all files in parallel
+  await Promise.allSettled(tasks.map(({ file, card }) => _uploadOne(file, card)));
 
-    const formData = new FormData();
-    formData.append('file', file);
-    let resultHtml = '';
+  refreshDashboard();
+  fetch('/api/books').then(r => r.json()).then(b => {
+    allBooks = b;
+    if (b.length > 0)
+      document.getElementById('chat-subtitle').textContent =
+        `${b.length} учебн. загружено · Ответы со ссылками на страницы`;
+  });
+}
 
-    try {
-      const resp = await fetch('/api/upload', { method:'POST', body:formData });
-      const data = await resp.json();
-      clearInterval(ticker);
-      bar.style.width = '100%';
+async function _uploadOne(file, card) {
+  const iconWrap = card.querySelector('.card-icon-wrap');
+  const icon     = card.querySelector('.card-icon');
+  const nameEl   = card.querySelector('.card-name');
+  const statusEl = card.querySelector('.card-status');
 
-      if (!resp.ok) {
-        resultHtml = `<div class="flex items-center gap-md p-md bg-error-container rounded-xl border border-error/20">
-          <span class="material-symbols-outlined text-error">error</span>
-          <div><p class="text-label-md font-medium text-error">Ошибка: ${escapeHtml(data.detail||'неизвестная')}</p>
-          <p class="text-label-sm text-on-surface-variant">${escapeHtml(file.name)}</p></div></div>`;
-      } else if (data.status === 'exists') {
-        resultHtml = `<div class="flex items-center gap-md p-md bg-surface-container rounded-xl border border-outline-variant">
-          <span class="material-symbols-outlined text-outline">info</span>
-          <div><p class="text-label-md font-medium text-on-surface">«${escapeHtml(file.name)}» уже загружена</p>
-          <p class="text-label-sm text-on-surface-variant">Учебник уже проиндексирован</p></div></div>`;
-      } else {
-        resultHtml = `<div class="flex items-center gap-md p-md bg-surface-container rounded-xl border border-outline-variant">
-          <span class="material-symbols-outlined text-secondary icon-fill">check_circle</span>
-          <div><p class="text-label-md font-medium text-on-surface">«${escapeHtml(data.title)}»</p>
-          <p class="text-label-sm text-on-surface-variant">${escapeHtml(data.author)} · ${data.chunks} фрагментов</p></div></div>`;
-        await fetch('/api/books').then(r=>r.json()).then(b => {
-          allBooks = b;
-          document.getElementById('chat-subtitle').textContent =
-            `${b.length} учебн. загружено · Ответы со ссылками на страницы`;
-        });
-      }
-    } catch(e) {
-      clearInterval(ticker);
-      resultHtml = `<div class="flex items-center gap-md p-md bg-error-container rounded-xl">
-        <span class="material-symbols-outlined text-error">error</span>
-        <p class="text-label-md text-error">Ошибка: ${escapeHtml(e.message)}</p></div>`;
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await resp.json();
+
+    icon.classList.remove('spin');
+    if (!resp.ok) {
+      iconWrap.className = 'w-10 h-10 bg-error-container rounded-lg flex items-center justify-center shrink-0 card-icon-wrap';
+      icon.className = 'material-symbols-outlined text-error card-icon';
+      icon.textContent = 'error';
+      statusEl.textContent = `Ошибка: ${escapeHtml(data.detail || 'неизвестная')}`;
+      statusEl.className = 'text-label-sm text-error card-status';
+    } else if (data.status === 'exists') {
+      iconWrap.className = 'w-10 h-10 bg-surface-container rounded-lg flex items-center justify-center shrink-0 card-icon-wrap border border-outline-variant card-icon-wrap';
+      icon.className = 'material-symbols-outlined text-outline card-icon';
+      icon.textContent = 'info';
+      statusEl.textContent = 'Уже загружен';
+    } else {
+      iconWrap.className = 'w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center shrink-0 card-icon-wrap';
+      icon.className = 'material-symbols-outlined text-on-secondary-container icon-fill card-icon';
+      icon.textContent = 'check_circle';
+      nameEl.textContent = data.title;
+      statusEl.textContent = `${escapeHtml(data.author)} · ${data.chunks} фрагментов`;
     }
-
-    results.insertAdjacentHTML('afterbegin', `<div class="fade-in">${resultHtml}</div>`);
-    await sleep(300);
+  } catch(e) {
+    icon.classList.remove('spin');
+    iconWrap.className = 'w-10 h-10 bg-error-container rounded-lg flex items-center justify-center shrink-0 card-icon-wrap';
+    icon.className = 'material-symbols-outlined text-error card-icon';
+    icon.textContent = 'error';
+    statusEl.textContent = 'Ошибка соединения';
+    statusEl.className = 'text-label-sm text-error card-status';
   }
-
-  statusEl.classList.add('hidden');
-  bar.style.width = '0%';
 }
 
 // ── Chat ──────────────────────────────────────────────────────────
