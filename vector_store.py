@@ -135,10 +135,17 @@ class VectorStore:
             for r in rows
         ]
 
-    def sample_chunk(self) -> str:
+    def sample_chunks(self) -> list[str]:
         with sqlite3.connect(self._db_path) as conn:
-            row = conn.execute("SELECT text FROM chunks LIMIT 1").fetchone()
-        return row[0][:200] if row else ""
+            total = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+            samples = []
+            for offset in [total // 4, total // 2, total * 3 // 4]:
+                row = conn.execute(
+                    "SELECT text FROM chunks LIMIT 1 OFFSET ?", (offset,)
+                ).fetchone()
+                if row:
+                    samples.append(row[0][:300])
+        return samples
 
     def book_exists(self, filename: str) -> bool:
         with sqlite3.connect(self._db_path) as conn:

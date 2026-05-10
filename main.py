@@ -243,12 +243,12 @@ def get_stats(user: dict = Depends(require_user)):
     store = get_store(user["sub"])
     books = store.list_books()
     total_chunks = sum(b["chunk_count"] for b in books)
-    sample = store.sample_chunk()
+    samples = store.sample_chunks()
     return {
         "books": len(books),
         "total_chunks": total_chunks,
         "db_path": str(store._db_path),
-        "sample_text": sample,
+        "samples": samples,
     }
 
 
