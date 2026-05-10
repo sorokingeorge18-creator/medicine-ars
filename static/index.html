@@ -446,11 +446,18 @@ tailwind.config = {
           <span class="text-label-sm text-on-surface-variant" id="chat-subtitle">Отвечаю только по загруженным учебникам</span>
         </div>
       </div>
-      <button onclick="showPage('library')"
-        class="hidden md:flex items-center gap-xs text-secondary text-label-md px-md py-sm rounded-lg border border-outline-variant hover:border-secondary transition-colors">
-        <span class="material-symbols-outlined" style="font-size:18px;">folder_open</span>
-        Учебники
-      </button>
+      <div class="flex items-center gap-sm">
+        <button onclick="clearHistory()"
+          title="Очистить историю"
+          class="p-sm text-on-surface-variant hover:text-error hover:bg-surface-container rounded-full transition-colors">
+          <span class="material-symbols-outlined" style="font-size:20px;">delete_sweep</span>
+        </button>
+        <button onclick="showPage('library')"
+          class="hidden md:flex items-center gap-xs text-secondary text-label-md px-md py-sm rounded-lg border border-outline-variant hover:border-secondary transition-colors">
+          <span class="material-symbols-outlined" style="font-size:18px;">folder_open</span>
+          Учебники
+        </button>
+      </div>
     </header>
 
     <main id="chat-messages" class="flex-1 overflow-y-auto px-md md:px-xl py-lg flex flex-col gap-lg bg-surface">
@@ -736,6 +743,47 @@ let currentPage = 'dashboard';
 let allBooks = [];
 let currentUser = null;
 
+// ── Chat history persistence ──────────────────────────────────────
+function _historyKey() { return currentUser ? `chat_history_${currentUser.sub}` : null; }
+
+function saveHistory() {
+  const key = _historyKey();
+  if (!key) return;
+  try { localStorage.setItem(key, JSON.stringify(chatHistory.slice(-100))); } catch(e) {}
+}
+
+function loadHistory() {
+  const key = _historyKey();
+  if (!key) return;
+  try {
+    const saved = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!saved.length) return;
+    chatHistory = saved;
+    const msgs = document.getElementById('chat-messages');
+    document.getElementById('chat-welcome')?.remove();
+    saved.forEach(m => {
+      if (m.role === 'user') {
+        const el = document.createElement('div');
+        el.className = 'flex flex-col items-end w-full';
+        el.innerHTML = `<div class="bg-primary text-on-primary p-md rounded-2xl rounded-tr-none max-w-[85%] md:max-w-[70%] shadow-sm"><p class="text-body-md">${escapeHtml(m.content)}</p></div>`;
+        msgs.appendChild(el);
+      } else {
+        const {wrapper, textDiv} = createAiBubble();
+        textDiv.innerHTML = renderMarkdown(m.content);
+      }
+    });
+    msgs.scrollTop = msgs.scrollHeight;
+  } catch(e) {}
+}
+
+function clearHistory() {
+  if (!confirm('Очистить историю чата?')) return;
+  chatHistory = [];
+  const key = _historyKey();
+  if (key) localStorage.removeItem(key);
+  resetChatWelcome();
+}
+
 // ── Navigation ────────────────────────────────────────────────────
 const PAGES = ['dashboard','library','upload','chat','profile','settings'];
 
@@ -936,6 +984,7 @@ async function deleteAllBooks() {
   if (!confirm('Удалить все загруженные учебники?')) return;
   await fetch('/api/books', { method:'DELETE' });
   chatHistory = [];
+  saveHistory();
   allBooks = [];
   document.getElementById('chat-subtitle').textContent = 'Отвечаю только по загруженным учебникам';
   resetChatWelcome();
@@ -1195,6 +1244,7 @@ async function sendMessage() {
     if (sources.length > 0) wrapper.appendChild(buildSourcesEl(sources));
     chatHistory.push({role:'user',content:question});
     chatHistory.push({role:'assistant',content:fullText});
+    saveHistory();
 
   } catch(e) {
     removeThinking();
@@ -1432,6 +1482,7 @@ async function initAuth() {
       hideLoginPage();
       updateUserUI(currentUser);
       applyProfile();
+      loadHistory();
       refreshDashboard();
     } else {
       showLoginPage();
