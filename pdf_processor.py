@@ -18,7 +18,8 @@ try:
 
     if OCR_AVAILABLE:
         pytesseract.pytesseract.tesseract_cmd = _tesseract
-        _POPPLER_PATH = "/opt/homebrew/bin"
+        import platform
+        _POPPLER_PATH = "/opt/homebrew/bin" if platform.system() == "Darwin" else None
 except ImportError:
     OCR_AVAILABLE = False
     _POPPLER_PATH = None
