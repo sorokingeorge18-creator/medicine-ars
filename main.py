@@ -1,4 +1,7 @@
 import asyncio
+import base64
+import hashlib
+import hmac
 import json
 import os
 import sqlite3
@@ -12,7 +15,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
-from passlib.context import CryptContext
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
@@ -26,7 +28,18 @@ app = FastAPI(title="Медицинская библиотека")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "dev-secret-change-me"))
 
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _hash_password(password: str) -> str:
+    salt = os.urandom(16)
+    key = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 260_000)
+    return base64.b64encode(salt + key).decode()
+
+
+def _verify_password(password: str, stored: str) -> bool:
+    data = base64.b64decode(stored.encode())
+    salt, key = data[:16], data[16:]
+    check = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 260_000)
+    return hmac.compare_digest(key, check)
 
 # ---------------------------------------------------------------------------
 # SQLite user storage
@@ -140,7 +153,7 @@ async def register(body: RegisterRequest, request: Request):
         raise HTTPException(status_code=400, detail="Заполните все поля")
     if len(body.password) < 6:
         raise HTTPException(status_code=400, detail="Пароль должен быть не менее 6 символов")
-    hashed = pwd_ctx.hash(body.password)
+    hashed = _hash_password(body.password)
     try:
         with _db() as conn:
             cursor = conn.execute(
@@ -159,7 +172,7 @@ async def login(body: LoginRequest, request: Request):
     email = body.email.strip().lower()
     with _db() as conn:
         row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-    if not row or not pwd_ctx.verify(body.password, row["password"]):
+    if not row or not _verify_password(body.password, row["password"]):
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
     request.session["user"] = {
         "sub": str(row["id"]),
